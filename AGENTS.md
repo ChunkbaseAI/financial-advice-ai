@@ -2,7 +2,7 @@
 
 Financial Advice AI is the public learning and reference repository for evidence-aware financial-advice workflows. It should help a developer understand the problem, run a complete example, inspect the architecture, see how it fails, and reproduce the result.
 
-This is the Nir Diamant-style learning repository in the Chunkbase ecosystem, widened beyond notebooks. It may show several architectures and frameworks. The examples must still share one honest domain model and one standard of evidence.
+The repository may show several architectures and frameworks, but every example must use one honest domain model and one standard of evidence. All teaching material must be original and written for this repository.
 
 ## Where we start
 
