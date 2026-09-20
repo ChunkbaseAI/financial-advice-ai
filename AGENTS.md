@@ -65,7 +65,9 @@ The first fixture set has landed: the Claim-card case set for the checker experi
 
 The checker experiment's run recorder has landed (TypeScript, issue #4): one self-describing record per model call plus a run manifest, gateway-reported usage only, errors and 429s preserved, with the offline rules-checker run frozen in `fixtures/rules_run_v1/`. See [docs/run-recorder.md](./docs/run-recorder.md). A Python mirror is a welcome sibling-language contribution.
 
-- TypeScript (Bun): `cd typescript && bun install && bun test`; typecheck with `bun run typecheck`; re-freeze the case set with `bun run freeze:case-set`; re-record the rules run with `bun run record:rules-run`.
+The checker experiment itself has landed (issue #2): the frozen identity-only roster and checker protocol (v0.3, with the v0.1/v0.2 failure history preserved under `fixtures/experiment_v1/superseded_v0_*/`), the run/score/estimate machinery, all nineteen recorded arms, and the generated results document. See [docs/checker-experiment.md](./docs/checker-experiment.md) and [docs/checker-experiment-results.md](./docs/checker-experiment-results.md). A Python mirror of the run machinery is a welcome sibling-language contribution.
+
+- TypeScript (Bun): `cd typescript && bun install && bun test`; typecheck with `bun run typecheck`; re-freeze the case set with `bun run freeze:case-set`; re-freeze the roster with `bun run freeze:roster`; re-record the rules run with `bun run record:rules-run`; estimate experiment cost with `bun run experiment:estimate`; run an arm with `bun run experiment:run -- --arm <name>`; regenerate the results document with `bun run experiment:score`.
 - Python (uv): `cd python && uv sync && uv run pytest`.
 
 Keep shared input and expected-output fixtures language-neutral where possible. Do not invent a mature directory map in documentation beyond what the landed examples establish.
