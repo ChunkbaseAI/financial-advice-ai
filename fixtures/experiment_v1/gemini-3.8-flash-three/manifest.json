@@ -1,0 +1,25 @@
+{
+  "format_version": 2,
+  "run_id": "gemini-3.8-flash-three-20260920-a795322",
+  "created_at": "2026-09-20T05:51:29.394Z",
+  "case_set_version": "1.0.0",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "protocol_version": "0.2.0",
+  "protocol_sha256": "aab7dbbfbfba25824ceee6a667543c059566588f7042844706581ccdf725b383",
+  "roster_version": "1.0.0",
+  "roster_sha256": "e44caa75cf33ecb90c18d16bff86a5b1b0beaaa32f73bb8d17a0fcfc6381eea1",
+  "code_commit": "a795322b77efca3e9b6e07613578dba3bb151313",
+  "repeat_count": 3,
+  "input_set_sha256": "5191c25077e906cabb90483cf671b1721352de1d8f8178fff3dfa779e21eda6f",
+  "checkers": [
+    "gemini-3.8-flash-three"
+  ],
+  "arm": {
+    "name": "gemini-3.8-flash-three",
+    "checker": "gemini-3.8-flash",
+    "model_id": "google/gemini-3.8-flash",
+    "variant": "three-question",
+    "decision_policy": "categorical-verdict",
+    "timing_run": false
+  }
+}

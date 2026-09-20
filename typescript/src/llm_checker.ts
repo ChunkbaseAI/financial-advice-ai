@@ -116,7 +116,13 @@ function modelReportFromResponse(spec: LlmArmSpec, attempts: CheckerCardResult["
   const last = attempts[attempts.length - 1];
   const body = last?.raw_response;
   if (!isRecord(body) || typeof body.model !== "string" || body.model.length === 0) return null;
-  return { id: spec.modelId, version: body.model, provider: providerFromAttempt(last) };
+  const provider = providerFromAttempt(last);
+  if (provider.length > 0) return { id: spec.modelId, version: body.model, provider };
+  // Some providers' response bodies carry no gateway routing metadata; the model id's
+  // creator prefix is the fallback until the generation lookup reports the provider.
+  const creator = spec.modelId.split("/")[0] ?? "";
+  if (creator.length === 0) return null;
+  return { id: spec.modelId, version: body.model, provider: creator };
 }
 
 function providerFromAttempt(attempt: { raw_response: unknown } | undefined): string {

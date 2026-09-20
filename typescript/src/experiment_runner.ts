@@ -377,6 +377,13 @@ async function completeGenerations(
       const provider = typeof lastAttempt.generation["provider_name"] === "string" ? lastAttempt.generation["provider_name"] : null;
       if (model !== null && model.length > 0) result.model.version = model;
       if (provider !== null && provider.length > 0) result.model.provider = provider;
+    } else if (
+      result.model !== null &&
+      (lastAttempt?.generation === undefined || lastAttempt?.generation === null) &&
+      result.model.provider.length === 0
+    ) {
+      // No response metadata and no confirmed lookup: an incomplete model identity is not recorded.
+      result.model = null;
     }
 
     if (result.error !== null && result.error.kind !== "input-preparation") executionErrors += 1;
