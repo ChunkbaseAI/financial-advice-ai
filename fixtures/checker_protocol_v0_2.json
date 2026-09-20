@@ -1,0 +1,356 @@
+{
+  "format_version": 1,
+  "protocol_version": "0.2.0",
+  "description": "Frozen contract for the checker experiment (issue #2): the three Jev questions, decision thresholds, LLM prompts and output schemas, retry policy, input-rendering rules, repeats, and limitations. Any change requires a new protocol version and a rerun. Version 0.2.0 supersedes 0.1.0 after the pre-batch run showed the 300-token reasoned output limit truncated three-question responses (finish_reason length), turning a design fault into false execution errors; the limit is now 1000 and the three-question reason fields ask for one short sentence. Nothing else changed.",
+  "case_set": {
+    "file": "fixtures/case_set_v1.json",
+    "version": "1.0.0",
+    "cards": 50
+  },
+  "roster": {
+    "file": "fixtures/roster_v1.json",
+    "version": "1.0.0",
+    "identity_only_rule": "Policy names omit person-attribution parentheticals present in the case set (for example \"(Dev Patel's service)\"); nothing else is changed."
+  },
+  "gateway": {
+    "base_url": "https://ai-gateway.vercel.sh",
+    "chat_completions_path": "/v1/chat/completions",
+    "typesafe_systemone_path": "/typesafe/v1/systemone",
+    "generation_lookup_path": "/v1/generation",
+    "models_pricing_path": "/v1/models",
+    "note": "All model calls route through the Vercel AI Gateway so latency and cost are measured on the same network path for every checker. Usage, cost and latency are gateway-reported only, never client-side estimates: tokens and charged cost come from the generation lookup (the gateway ingests usage events asynchronously, so lookups are deferred until after an arm's calls complete), and the gateway-reported market cost is preserved alongside the charged cost."
+  },
+  "repeats": {
+    "scored": 3,
+    "timing": 1,
+    "note": "Three fresh evaluations per scored arm (never replays of saved answers; retries belong inside a repeat). Timing runs are verdict-only, separately labelled, and not scored."
+  },
+  "input_rendering": {
+    "whos_who": {
+      "rule": "Identity-only line naming the household's people in subject-id order, joined with '; ', with no ownership hints. Policies are never listed here.",
+      "template": "People in this household: {names}."
+    },
+    "claim": {
+      "subject": "The roster name for claim.subject_id, as written; a wrongly-attributed card keeps the wrong name. Never corrected.",
+      "field": "The claim field as '{code} ({description})' from the case-set field vocabulary.",
+      "value": "The claim value formatted the way the source artifacts write figures: comma-grouped thousands, at most two decimal places, no trailing zeros.",
+      "unit": "The claim unit as '{code} ({description})' from the case-set unit vocabulary.",
+      "period_or_basis": "As written on the card.",
+      "as_of": "The ISO date as written on the card."
+    },
+    "evidence": {
+      "rule": "Each Evidence Span in card order as { artifact, lines, quote }, where lines is 'start-end'. The quote is the exact span text. No artifact dates, revisions or titles are shown; the quoted text must carry any time signal.",
+      "permitted_value_formatting_differences": [
+        "thousands separators",
+        "currency signs adjacent to the figure",
+        "decimal places up to two, with no trailing zeros"
+      ]
+    },
+    "identical_across_arms": "Every arm (rules, jev, and every LLM configuration) sees the identical model-visible input object. The frozen case-set fixture is never modified; this rendering lives in the protocol."
+  },
+  "decision_thresholds": {
+    "note": "Experimental starting lines for v0.1, not validated safety limits. Jev decisions use the actual answer probabilities, never Jev's separate confidence field. All raw probabilities are preserved in the records.",
+    "noul_gate": {
+      "pass_at_or_above": 0.9,
+      "unsupported_at_or_below": 0.1,
+      "between": "uncertain"
+    },
+    "ownership_gate": {
+      "pass_at_or_above": 0.9,
+      "rules": "If the selected option is unknown or not stated, the check is uncertain regardless of probability. Otherwise, if the probability of the card's claimed subject (a specific option, joint ownership included when it is the claimed subject) is at or above the pass threshold, the check passes. Otherwise, if a different specific option (including joint ownership) reaches the threshold, the check is a mismatch. Otherwise, uncertain."
+    },
+    "card_outcome": {
+      "pass": "A card passes only when ownership, value_support and time_support all pass. The passing outcome is named 'passed these three checks', never 'fully verified'.",
+      "review": "Any mismatch, uncertainty or unsupported check sends the card to review.",
+      "review_reason_severity": [
+        "unsupported",
+        "mismatch",
+        "uncertain"
+      ],
+      "review_reason_tiebreak": "When several checks fail, the review reason is the most severe failing check; ties break by check order: ownership, value_support, time_support."
+    },
+    "llm_categorical": "LLM verdicts are categorical (supported / unsupported / uncertain); only supported passes. Jev's probability-gated acceptance and the LLMs' categorical verdicts are different decision policies and are labelled as such in the results."
+  },
+  "jev": {
+    "arm": "jev",
+    "model_id": "typesafe-ai/jev",
+    "state": "The model-visible input object, sent as structured state.",
+    "state_token_cap": 32000,
+    "questions": {
+      "ownership": {
+        "type": "choice",
+        "instructions": "Who does the source attribute this value to, for the field being checked? The value being checked is `claim.value` for the field `claim.field` about the subject `claim.subject`; the source is the `evidence` entries.",
+        "specific_options": "Every subject of the card's household, by roster name, in subject-id order, with no option description.",
+        "fixed_options": {
+          "joint ownership": "The source attributes the value to joint ownership by more than one person.",
+          "unknown": "The source does not make clear who the value is attributed to.",
+          "not stated": "The source does not state who the value is attributed to."
+        },
+        "option_order": "Specific subjects in subject-id order, then joint ownership, unknown, not stated."
+      },
+      "value_support": {
+        "type": "noul",
+        "instructions": "Does the source explicitly state this value for this field? The same number found elsewhere is not support. The value being checked is `claim.value` for the field `claim.field` about the subject `claim.subject`; the source is the `evidence` entries.",
+        "criteria": {
+          "true": "Yes: an `evidence` span explicitly states this value for this field for the subject `claim.subject`. Permitted formatting differences only: thousands separators, currency signs next to the figure, and up to two decimal places.",
+          "false": "No: no `evidence` span explicitly states this value for this field, or the value belongs to a different subject, field, basis or time; the same number found elsewhere is not support."
+        }
+      },
+      "time_support": {
+        "type": "noul",
+        "instructions": "Does the source support the time status claimed on the card? The claimed time status is `claim.period_or_basis` as at `claim.as_of`; the source is the `evidence` entries.",
+        "criteria": {
+          "true": "Yes: an `evidence` span presents the value with the time status the card claims; a value the source explicitly labels historical supports a card that claims it as historical.",
+          "false": "No: the `evidence` spans present the value with a different time status than the card claims, for example an explicitly historical, past or conditional value behind a card that claims a current value."
+        }
+      }
+    }
+  },
+  "llm_checkers": {
+    "models": {
+      "claude-sonnet-5": "anthropic/claude-sonnet-5",
+      "gemini-3.8-flash": "google/gemini-3.8-flash",
+      "gpt-5.4-mini": "openai/gpt-5.4-mini",
+      "claude-haiku-4.5": "anthropic/claude-haiku-4.5"
+    },
+    "structured_output": "response_format json_schema with strict schemas on the chat completions endpoint; schema-constrained, not 'please return JSON'.",
+    "max_output_tokens_reasoned": 1000,
+    "max_output_tokens_verdict_only": 100,
+    "verdicts": [
+      "supported",
+      "unsupported",
+      "uncertain"
+    ],
+    "prompts": {
+      "input_placeholder": "{input_json}",
+      "overall": "You are checking a drafted Claim about a household's finances against evidence quoted from that household's source documents.\n\n<input>\n{input_json}\n</input>\n\nThe Claim is the proposition in \"claim\", about the subject named in \"claim.subject\". The only evidence is the quoted spans in \"evidence\"; anything not present in them is not support. The same number appearing for a different person, policy, field, basis or time status is not support for this Claim.\n\nQuestion: does the source support this card?\n\n- \"supported\": the evidence explicitly supports the Claim's subject, value, field, basis and time status as claimed.\n- \"unsupported\": the evidence contradicts the Claim, or does not state what the Claim asserts.\n- \"uncertain\": you cannot tell from the evidence.\n\nAnswer \"supported\" only when the evidence supports every part of the Claim.",
+      "three_question": "You are checking a drafted Claim about a household's finances against evidence quoted from that household's source documents.\n\n<input>\n{input_json}\n</input>\n\nThe Claim is the proposition in \"claim\", about the subject named in \"claim.subject\". The only evidence is the quoted spans in \"evidence\"; anything not present in them is not support. The same number appearing for a different person, policy, field, basis or time status is not support for this Claim.\n\nAnswer three questions about whether the source supports this card:\n\n1. ownership: does the source attribute this value, for the field being checked, to the subject named in \"claim.subject\"?\n2. value_support: does the source explicitly state this value for this field? The same number found elsewhere is not support.\n3. time_support: does the source support the time status claimed on the card? A historical value correctly labelled historical supports a card that claims it as historical; an old value presented as current does not.\n\nFor each question, answer:\n- \"supported\": the evidence explicitly supports this part of the Claim.\n- \"unsupported\": the evidence contradicts this part, or does not state what it asserts.\n- \"uncertain\": you cannot tell from the evidence.",
+      "retry": "Your previous response was not valid for the required output format. Respond again with a single JSON object that matches the required schema exactly: every required field present, verdicts spelled exactly as defined, and no text outside the JSON."
+    },
+    "output_schemas": {
+      "overall": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "uncertain"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning."
+          }
+        },
+        "required": [
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "overall_verdict_only": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "uncertain"
+            ]
+          }
+        },
+        "required": [
+          "verdict"
+        ],
+        "additionalProperties": false
+      },
+      "three_question": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "object",
+            "properties": {
+              "ownership": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning."
+                  }
+                },
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
+                "additionalProperties": false
+              },
+              "value_support": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning."
+                  }
+                },
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
+                "additionalProperties": false
+              },
+              "time_support": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning."
+                  }
+                },
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ownership",
+              "value_support",
+              "time_support"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "additionalProperties": false
+      },
+      "three_question_verdict_only": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "object",
+            "properties": {
+              "ownership": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
+                },
+                "required": [
+                  "verdict"
+                ],
+                "additionalProperties": false
+              },
+              "value_support": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
+                },
+                "required": [
+                  "verdict"
+                ],
+                "additionalProperties": false
+              },
+              "time_support": {
+                "type": "object",
+                "properties": {
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
+                },
+                "required": [
+                  "verdict"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ownership",
+              "value_support",
+              "time_support"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "retry_policy": {
+    "max_retries": 1,
+    "retry_on": "invalid output only: unparseable JSON, or output that fails the required schema",
+    "never_retry": "A valid answer is never retried because it disagrees with the answer key. Two failed attempts are an execution error, never a pass or a caught mistake.",
+    "counting": "Both responses are preserved; all cost and elapsed time including the failed attempt is counted; first-attempt failures and failures remaining after retry are reported separately.",
+    "transport": "HTTP 429 uses the recorded exponential backoff (3 attempts, 500 ms base) before any recorded attempt; the client performs no other silent retries.",
+    "jev": "For Jev, invalid output means missing or malformed answers (rare: answers are schema-constrained). The retry re-sends the identical typed questions; there is no text format to correct."
+  },
+  "outcomes": {
+    "pass_name": "passed these three checks",
+    "unsupported_meaning": "the source lacks or contradicts the claimed support; never 'proven wrong'",
+    "action_flip": "a card switching between pass and review across a configuration's valid repeats",
+    "verdict_change": "a review-bound verdict changing between repeats without a pass/review switch"
+  },
+  "limitations": [
+    "50 synthetic cards from one author across three fictional households; the difficulty of the case set is a design choice, not a measured property.",
+    "Per-category counts of 3-5 cards cannot support per-category accuracy claims; the category grid shows observed catch rates only.",
+    "Three repeats establish spread, not stability; calibration findings are exploratory and cannot set production-safe thresholds.",
+    "The 0.90/0.10 thresholds are experimental starting lines for v0.1, not validated safety limits.",
+    "Jev's probability-gated acceptance and the LLMs' categorical verdicts are different decision policies; the comparison shows catch and cost trade-offs, not a like-for-like accuracy claim.",
+    "Latency is gateway-reported (time to first token for chat models); verdict-only timing runs are labelled separately and are not scored.",
+    "Costs are gateway-reported for completed runs; the pre-run estimate uses public list prices and a characters-per-token approximation, not a tokenizer.",
+    "Ground truth comes from the case set's design, checkable by a person reading each card; it is synthetic, not adjudicated production data.",
+    "The experiment tests checking of supplied Claims against supplied Evidence Spans only: no extraction, no generation, no suitability or compliance claim is possible.",
+    "Single case set, single run day, pinned model versions; no cross-vendor leaderboard or 'first' claim.",
+    "The rules checker exists to demonstrate the failure mode of value-presence matching, not as a baseline worth adopting."
+  ]
+}

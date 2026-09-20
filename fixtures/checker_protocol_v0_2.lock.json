@@ -1,0 +1,12 @@
+{
+  "protocol_file": "checker_protocol_v0_2.json",
+  "protocol_version": "0.2.0",
+  "sha256": "aab7dbbfbfba25824ceee6a667543c059566588f7042844706581ccdf725b383",
+  "case_set_file": "case_set_v1.json",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "roster_file": "roster_v1.json",
+  "roster_sha256": "e44caa75cf33ecb90c18d16bff86a5b1b0beaaa32f73bb8d17a0fcfc6381eea1",
+  "frozen_at": "2026-09-20",
+  "note": "Frozen before any scored model run under this version (issue #2). Supersedes protocol 0.1.0, whose 300-token reasoned output limit truncated three-question responses with finish_reason length; that pre-batch failure is preserved under superseded_v0_1/. Every run verifies this hash plus its bindings to the frozen case set and roster. Any protocol change means a new version and a rerun.",
+  "supersedes": "checker_protocol_v0_1.json"
+}

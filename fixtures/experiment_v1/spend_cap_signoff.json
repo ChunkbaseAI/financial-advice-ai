@@ -15,5 +15,24 @@
     "Paid credits added to the experiment gateway key so the four pinned LLM arms are served.",
     "The four pinned models stay as pinned; no substitution.",
     "All arms run back to back on the same day; the batch stops if actual spend reaches the cap."
+  ],
+  "revisions": [
+    {
+      "signed_off_at": "2026-09-20",
+      "protocol_version": "0.2.0",
+      "reason": "protocol 0.1.0's 300-token reasoned output limit truncated three-question responses (finish_reason length); raised to 1000 in 0.2.0",
+      "estimate": "fixtures/experiment_v1/cost_estimate.json",
+      "estimate_totals": {
+        "networked_calls": 1800,
+        "expected_cost_usd": 3.3814,
+        "worst_case_cost_usd": 6.7628
+      },
+      "spending_cap_usd": 8.0,
+      "spend_so_far": {
+        "charged_usd": 0.0,
+        "market_cost_usd": 1.9621,
+        "note": "superseded v0.1 runs, gateway-reported"
+      }
+    }
   ]
 }

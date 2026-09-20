@@ -4,8 +4,10 @@ import { isNonEmptyString, isRecord } from "./case_set_schema.ts";
 
 export const PROTOCOL_FORMAT_VERSION = 1;
 
-export const DEFAULT_PROTOCOL_PATH = new URL("../../fixtures/checker_protocol_v0_1.json", import.meta.url);
-export const DEFAULT_PROTOCOL_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_1.lock.json", import.meta.url);
+export const PROTOCOL_V0_1_PATH = new URL("../../fixtures/checker_protocol_v0_1.json", import.meta.url);
+export const PROTOCOL_V0_1_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_1.lock.json", import.meta.url);
+export const DEFAULT_PROTOCOL_PATH = new URL("../../fixtures/checker_protocol_v0_2.json", import.meta.url);
+export const DEFAULT_PROTOCOL_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_2.lock.json", import.meta.url);
 
 export const LLM_VERDICTS = ["supported", "unsupported", "uncertain"] as const;
 export type LlmVerdict = (typeof LLM_VERDICTS)[number];

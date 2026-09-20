@@ -19,7 +19,7 @@ const DEFAULT_OUTPUT = fileURLToPath(new URL("../../fixtures/experiment_v1/cost_
 const MODELS_URL = "https://ai-gateway.vercel.sh/v1/models";
 
 const CHARS_PER_TOKEN = 4;
-const OUTPUT_TOKENS_REASONED = 60;
+const OUTPUT_TOKENS_REASONED = 350;
 const OUTPUT_TOKENS_VERDICT_ONLY = 15;
 const OUTPUT_TOKENS_JEV = 0;
 

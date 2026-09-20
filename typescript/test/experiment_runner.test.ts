@@ -86,7 +86,7 @@ describe("runArm (rules, offline)", () => {
     expect(result.passed + result.reviewed).toBe(100);
     expect(result.inputPreparationErrors).toBe(0);
     const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
-    expect(manifest.protocol_version).toBe("0.1.0");
+    expect(manifest.protocol_version).toBe("0.2.0");
     expect(manifest.protocol_sha256).toBe(freeze.protocolSha256);
     expect(manifest.case_set_sha256).toBe(freeze.caseSetSha256);
     expect(manifest.roster_sha256).toBe(freeze.rosterSha256);
