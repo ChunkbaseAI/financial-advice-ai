@@ -1,5 +1,46 @@
+import { readFileSync } from "node:fs";
 import { GatewayHttpError, GatewayTimeoutError } from "./gateway_backoff.ts";
 import type { GatewayUsage } from "./run_record_schema.ts";
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** The gateway routing metadata on a raw response body, wherever the provider puts it. */
+export function gatewayRoutingOf(body: unknown): Record<string, unknown> {
+  if (!isRecord(body)) return {};
+  const providerMetadata = isRecord(body.provider_metadata) ? body.provider_metadata : {};
+  const gateway = isRecord(providerMetadata.gateway) ? providerMetadata.gateway : {};
+  return isRecord(gateway.routing) ? gateway.routing : {};
+}
+
+export function gatewayGenerationIdOf(body: unknown): string | null {
+  if (!isRecord(body)) return null;
+  const providerMetadata = isRecord(body.provider_metadata) ? body.provider_metadata : {};
+  const gateway = isRecord(providerMetadata.gateway) ? providerMetadata.gateway : {};
+  if (typeof gateway.generationId === "string") return gateway.generationId;
+  return typeof body.id === "string" ? body.id : null;
+}
+
+export function argValue(flag: string): string | undefined {
+  const argv = process.argv.slice(2);
+  const index = argv.indexOf(flag);
+  return index === -1 ? undefined : argv[index + 1];
+}
+
+/** The gateway key from the environment, falling back to the repository .env without overriding it. */
+export function resolveApiKey(repoDotEnv: string): string {
+  if (process.env.AI_GATEWAY_API_KEY !== undefined && process.env.AI_GATEWAY_API_KEY.trim().length > 0) {
+    return apiKeyFromEnv(process.env as Record<string, string | undefined>);
+  }
+  let dotenv: Record<string, string> = {};
+  try {
+    dotenv = loadDotEnvFile(readFileSync(repoDotEnv, "utf8"));
+  } catch {
+    // no .env file; the error below names the expected locations
+  }
+  return apiKeyFromEnv({ ...dotenv, AI_GATEWAY_API_KEY: dotenv["AI_GATEWAY_API_KEY"] ?? "" });
+}
 
 const DEFAULT_BASE_URL = "https://ai-gateway.vercel.sh";
 const CHAT_COMPLETIONS_PATH = "/v1/chat/completions";
@@ -89,10 +130,6 @@ export interface GatewayClientOptions {
   fetch?: FetchLike | undefined;
   sleep?: ((ms: number) => Promise<void>) | undefined;
   timeoutMs?: number | undefined;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export class GatewayClient {

@@ -11,16 +11,11 @@ import {
 import { DEFAULT_CASE_SET_LOCK_PATH, DEFAULT_CASE_SET_PATH, loadCaseSet } from "./case_set_schema.ts";
 import { DEFAULT_ROSTER_LOCK_PATH, DEFAULT_ROSTER_PATH } from "./roster.ts";
 import { scoreArmRun, scoredCardsFromCaseSet } from "./scorer.ts";
+import { argValue } from "./gateway_client.ts";
 import { renderResultsDocument } from "./render_results.ts";
 
 const DEFAULT_RUNS_DIR = fileURLToPath(new URL("../../fixtures/experiment_v1/", import.meta.url));
 const DEFAULT_OUTPUT = fileURLToPath(new URL("../../docs/checker-experiment-results.md", import.meta.url));
-
-function argValue(flag: string): string | undefined {
-  const argv = process.argv.slice(2);
-  const index = argv.indexOf(flag);
-  return index === -1 ? undefined : argv[index + 1];
-}
 
 const runsDir = argValue("--runs") ?? DEFAULT_RUNS_DIR;
 const output = argValue("--out") ?? DEFAULT_OUTPUT;

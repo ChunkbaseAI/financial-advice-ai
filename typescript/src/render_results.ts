@@ -1,6 +1,6 @@
 import type { CheckerProtocol } from "./checker_protocol.ts";
 import { CATEGORIES, type Category } from "./case_set_schema.ts";
-import type { ScoredRun } from "./scorer.ts";
+import { median, type ScoredRun } from "./scorer.ts";
 
 export interface ResultsDocumentInput {
   scoredRuns: ScoredRun[];
@@ -88,12 +88,21 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
       "Medians across the repeats, with min-max in parentheses. Latency is gateway-reported. Consistent does not mean correct.",
   );
   push();
-  push("| Arm | Decision policy | Dangerous passes | Nuisance flags | Median latency (ms) | Cost per card evaluation |");
+  push(
+    "Latency is median with p95 in parentheses. The cost column is the gateway-reported list-price (market) cost per card evaluation - " +
+      "the charged cost is mostly $0.000000 here because the calls were covered by credits, so it would hide every difference; both are shown in the Cost section.",
+  );
+  push();
+  push("| Arm | Decision policy | Dangerous passes | Nuisance flags | Median latency (ms, p95) | List-price cost per card evaluation |");
   push("| --- | --- | --- | --- | --- | --- |");
   for (const run of scoredRuns) {
     const { summary } = run;
+    const latency =
+      summary.latencyMedianMs === null
+        ? "-"
+        : `${summary.latencyMedianMs} (${summary.latencyP95Ms ?? "-"})`;
     push(
-      `| ${run.armName} | ${run.manifest.arm.decision_policy} | ${range(summary.dangerousPasses.median, summary.dangerousPasses.min, summary.dangerousPasses.max)} | ${range(summary.nuisanceFlags.median, summary.nuisanceFlags.min, summary.nuisanceFlags.max)} | ${summary.latencyMedianMs === null ? "-" : summary.latencyMedianMs} | ${usd(summary.costPerCardEvaluation)} |`,
+      `| ${run.armName} | ${run.manifest.arm.decision_policy} | ${range(summary.dangerousPasses.median, summary.dangerousPasses.min, summary.dangerousPasses.max)} | ${range(summary.nuisanceFlags.median, summary.nuisanceFlags.min, summary.nuisanceFlags.max)} | ${latency} | ${usd(summary.marketCostPerCardEvaluation)} |`,
     );
   }
   push();
@@ -200,10 +209,18 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
     push();
     const dangerous = run.failures.filter((f) => f.kind === "dangerous-pass");
     const nuisance = run.failures.filter((f) => f.kind === "nuisance-flag");
-    if (dangerous.length === 0 && nuisance.length === 0) {
-      push("No dangerous passes and no nuisance flags in this arm's records.");
+    const execution = run.failures.filter((f) => f.kind === "execution-error");
+    const quoted = dangerous.length + nuisance.length + execution.length;
+    if (quoted === 0) {
+      push("No dangerous passes, nuisance flags or execution errors in this arm's records.");
       push();
       continue;
+    }
+    if (quoted < 3) {
+      push(
+        `This arm's records contain only ${quoted} failure(s) in total, so fewer than three are quoted here; every one that exists is shown.`,
+      );
+      push();
     }
     if (dangerous.length > 0) {
       push("Wrong cards passed:");
@@ -218,6 +235,14 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
       push();
       for (const failure of nuisance.slice(0, 3)) {
         push(`- **${failure.cardId}** (${failure.category}, expected ${failure.expected}), repeat ${failure.repeat}: claim — ${failure.claim}. Checker said: "${failure.quote}"`);
+      }
+      push();
+    }
+    if (execution.length > 0) {
+      push("Execution errors:");
+      push();
+      for (const failure of execution.slice(0, 3)) {
+        push(`- **${failure.cardId}** (${failure.category}), repeat ${failure.repeat}: claim — ${failure.claim}. ${failure.quote}`);
       }
       push();
     }
@@ -244,28 +269,104 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
   push("## What the comparison shows");
   push();
   push(
-    "Reading the headline table with the category grid together, under the frozen protocol and its limitations:",
+    "Reading the headline table with the category grid together, under the frozen protocol and its limitations. " +
+      "Every number in this section is derived from the same scored records as the tables above.",
   );
   push();
-  push(
-    "- The rules checker passes 17 of 25 corrupted cards per repeat (median): every wrong-subject, stale-value, hypothetical and wrong-basis card, exactly the dangerous passes the case set was built to demonstrate. Value-presence matching is not checking.",
-  );
-  push(
-    "- Jev, gated at the frozen 0.90/0.10 lines, sent every corrupted card to review in every repeat (0 dangerous passes) and caught the sneaky categories the rules checker passes: wrong-subject, stale-value, hypothetical and wrong-basis all at 100%. Its cost was the lowest of any networked arm and its latency the lowest of any arm.",
-  );
-  push(
-    "- Jev's price was nuisance flags: at the 0.90 threshold only about 8% of correct cards passed these three checks per repeat, mostly because its value-support and time-support probabilities sit between the thresholds. The exploratory calibration section shows the top band is not overconfident (a 0.90+ probability always came with the value truly present in these runs), so the nuisance flags point at the threshold, not at wrong high-confidence answers; where that line should sit is a question for a larger labelled set, not these three repeats.",
-  );
-  push(
-    "- The generative checkers sit between: claude-sonnet-5-overall and both gemini arms passed 0 corrupted cards, while claude-haiku-4.5-overall and gpt-5.4-mini (both configurations) passed hypothetical or wrong-basis cards. Every arm that caught all corrupted cards did so by flagging some correct ones too; no arm passed every correct card while catching everything, and a cautious checker must not look better merely for flagging everything.",
-  );
-  push(
-    "- The three-question configurations caught the same or more than their overall counterparts but flagged more correct cards and cost roughly 1.5-3x per card: decomposition helped the catch rate of the cheaper models (haiku, gpt) and hurt the nuisance rate of the stronger ones.",
-  );
-  push(
-    "- gemini-3.8-flash-three is the structured-output failure case: 23 of 150 evaluations died after both attempts hit the 1000-token output limit (finish_reason length; verbose reasons). Those are execution errors, shown with their denominators, never counted as passes or catches.",
-  );
-  push();
+
+  const rulesRun = scoredRuns.find((run) => run.manifest.arm.variant === "rules");
+  const jevRun = scoredRuns.find((run) => run.manifest.arm.variant === "decomposed");
+  const llmArms = scoredRuns.filter((run) => run.manifest.arm.decision_policy === "categorical-verdict");
+  if (rulesRun !== undefined && rulesRun.repeats.length > 0) {
+    const grid = rulesRun.repeats[0]!.byCategory;
+    const corruptedTotal = CATEGORIES.filter((c) => c !== "correct").reduce((sum, c) => sum + (grid[c]?.total ?? 0), 0);
+    push(
+      `- The rules checker passes ${rulesRun.summary.dangerousPasses.median} of ${corruptedTotal} corrupted cards per repeat (median): ` +
+        `every wrong-subject, stale-value, hypothetical and wrong-basis card, exactly the dangerous passes the case set was built to demonstrate. ` +
+        "Value-presence matching is not checking.",
+    );
+    push();
+  }
+  if (jevRun !== undefined) {
+    const grid = jevRun.repeats[0]!.byCategory;
+    const sneaky: Category[] = ["wrong-subject", "stale-value", "hypothetical", "wrong-basis"];
+    const sneakyAllCaught = jevRun.repeats.every((repeat) =>
+      sneaky.every((c) => (repeat.byCategory[c]?.caught ?? 0) === (repeat.byCategory[c]?.total ?? 0)),
+    );
+    const correctPassRates = jevRun.repeats.map((repeat) => {
+      const correct = repeat.byCategory["correct"]!;
+      return correct.total === 0 ? 0 : (correct.passed ?? 0) / correct.total;
+    });
+    const correctPassMedian = Math.round(median(correctPassRates) * 100);
+    const networkedCosts = scoredRuns
+      .filter((run) => run.manifest.arm.variant !== "rules")
+      .map((run) => run.summary.marketCostPerCardEvaluation);
+    const cheapestNetworked = networkedCosts.length > 0 && jevRun.summary.marketCostPerCardEvaluation <= Math.min(...networkedCosts);
+    const latencies = scoredRuns.map((run) => run.summary.latencyMedianMs).filter((l): l is number => l !== null);
+    const fastest = latencies.length > 0 && jevRun.summary.latencyMedianMs === Math.min(...latencies);
+    push(
+      `- Jev, gated at the frozen 0.90/0.10 lines, recorded ${jevRun.summary.dangerousPasses.median} dangerous passes (median) ` +
+        (sneakyAllCaught
+          ? "and caught the sneaky categories the rules checker passes: wrong-subject, stale-value, hypothetical and wrong-basis all at 100% in every repeat."
+          : "though it missed some cards in the sneaky categories; see the category grid.") +
+        (cheapestNetworked ? " Its list-price cost was the lowest of any networked arm." : "") +
+        (fastest ? " Its latency was the lowest of any arm." : ""),
+    );
+    const topBand = jevRun.calibration?.bands.find((band) => band.label === "0.90 - 1.00");
+    const topBandHonest =
+      topBand !== undefined && topBand.count > 0 && topBand.observedTrueRate !== null && topBand.observedTrueRate >= 1;
+    push(
+      `- Jev's price was nuisance flags: at the 0.90 threshold about ${correctPassMedian}% of correct cards passed these three checks per repeat, ` +
+        "mostly because its value-support and time-support probabilities sit between the thresholds. " +
+        (topBandHonest
+          ? "In these runs the top calibration band is not overconfident (every 0.90+ value-support probability came with the value truly present), so the nuisance flags point at the threshold, not at wrong high-confidence answers; "
+          : "The calibration section shows how often its high probabilities were right in these runs; ") +
+        "where that line should sit is a question for a larger labelled set, not these three repeats.",
+    );
+    push();
+  }
+  {
+    const caughtAll = llmArms.filter((run) => run.summary.dangerousPasses.max === 0);
+    const passedSome = llmArms.filter((run) => run.summary.dangerousPasses.max > 0);
+    const passedSomeList = passedSome.map((run) => `${run.armName} (${run.summary.dangerousPasses.median} median, max ${run.summary.dangerousPasses.max})`);
+    const caughtAllList = caughtAll.map((run) => run.armName);
+    const list = (names: string[]) => (names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]!}`);
+    push(
+      `- The generative checkers sit between: ${caughtAllList.length > 0 ? `${list(caughtAllList)} passed no corrupted cards in any repeat` : "no generative arm passed zero corrupted cards in every repeat"}, ` +
+        `while ${passedSomeList.length > 0 ? passedSomeList.join(", ") : "none"} passed corrupted cards. ` +
+        "Every arm that caught all corrupted cards did so by flagging some correct ones too; no arm passed every correct card while catching everything, " +
+        "and a cautious checker must not look better merely for flagging everything.",
+    );
+    push();
+    const ratios = llmArms
+      .filter((run) => run.armName.endsWith("-three"))
+      .map((three) => {
+        const overall = llmArms.find((run) => run.armName === three.armName.replace(/-three$/, "-overall"));
+        if (overall === undefined || overall.summary.marketCostPerCardEvaluation === 0) return null;
+        return three.summary.marketCostPerCardEvaluation / overall.summary.marketCostPerCardEvaluation;
+      })
+      .filter((ratio): ratio is number => ratio !== null);
+    if (ratios.length > 0) {
+      push(
+        `- The three-question configurations cost roughly ${Math.min(...ratios).toFixed(1)}-${Math.max(...ratios).toFixed(1)}x their overall counterparts per card at list price; ` +
+          "compare their catch and nuisance numbers in the tables above rather than taking decomposition as free.",
+      );
+      push();
+    }
+    const execFailureArm = scoredRuns.reduce<ScoredRun | undefined>(
+      (worst, run) => (run.summary.executionErrors > 0 && (worst === undefined || run.summary.executionErrors > worst.summary.executionErrors) ? run : worst),
+      undefined,
+    );
+    if (execFailureArm !== undefined) {
+      push(
+        `- ${execFailureArm.armName} is the largest structured-output failure case: ${execFailureArm.summary.executionErrors} of ` +
+          `${execFailureArm.records.length} evaluations died as execution errors (both attempts invalid; see the errors table for first-attempt counts). ` +
+          "Those are never counted as passes or catches, and the gallery quotes them.",
+      );
+      push();
+    }
+  }
+
   push("## Protocol history");
   push();
   push(

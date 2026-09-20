@@ -9,7 +9,7 @@ import { attemptUsageFromGeneration, GatewayClient, type GenerationInfo } from "
 import { evaluateCardWithJev, assertJevStateWithinCap } from "./jev_checker.ts";
 import { evaluateCardWithLlm } from "./llm_checker.ts";
 import { EvaluationRecorder, type CheckerCardResult } from "./evaluation_recorder.ts";
-import { mapLlmOverall } from "./decision_mapping.ts";
+import { mapCategoricalVerdict } from "./decision_mapping.ts";
 import { labeledSha256Of } from "./hashing.ts";
 import type { Card } from "./case_set_schema.ts";
 
@@ -118,7 +118,7 @@ function evaluateCardWithRules(valuePresent: boolean): CheckerCardResult {
     attempts: [],
     firstAttemptInvalid: false,
     retried: false,
-    decision: mapLlmOverall(verdict),
+    decision: mapCategoricalVerdict(verdict),
     error: null,
   };
 }

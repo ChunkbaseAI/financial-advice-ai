@@ -11,6 +11,7 @@ import {
 import { DEFAULT_CASE_SET_LOCK_PATH, DEFAULT_CASE_SET_PATH, loadCaseSet } from "./case_set_schema.ts";
 import { DEFAULT_ROSTER_LOCK_PATH, DEFAULT_ROSTER_PATH, loadRoster, type Roster } from "./roster.ts";
 import { allArms } from "./experiment_runner.ts";
+import { argValue } from "./gateway_client.ts";
 import { prepareModelInput } from "./input_preparation.ts";
 import { buildJevRequest } from "./jev_checker.ts";
 import { buildLlmRequest } from "./llm_checker.ts";
@@ -22,12 +23,6 @@ const CHARS_PER_TOKEN = 4;
 const OUTPUT_TOKENS_REASONED = 350;
 const OUTPUT_TOKENS_VERDICT_ONLY = 15;
 const OUTPUT_TOKENS_JEV = 0;
-
-function argValue(flag: string): string | undefined {
-  const argv = process.argv.slice(2);
-  const index = argv.indexOf(flag);
-  return index === -1 ? undefined : argv[index + 1];
-}
 
 interface ModelPricing {
   input: number;

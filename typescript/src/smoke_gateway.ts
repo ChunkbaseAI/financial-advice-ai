@@ -1,17 +1,10 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { GatewayClient, apiKeyFromEnv, loadDotEnvFile } from "./gateway_client.ts";
+import { GatewayClient, resolveApiKey } from "./gateway_client.ts";
 
 const REPO_DOT_ENV = fileURLToPath(new URL("../../.env", import.meta.url));
 
-function resolveApiKey(): string {
-  if (process.env.AI_GATEWAY_API_KEY !== undefined && process.env.AI_GATEWAY_API_KEY.trim().length > 0) {
-    return apiKeyFromEnv(process.env as Record<string, string | undefined>);
-  }
-  return apiKeyFromEnv(loadDotEnvFile(readFileSync(REPO_DOT_ENV, "utf8")));
-}
-
-const client = new GatewayClient({ apiKey: resolveApiKey() });
+const client = new GatewayClient({ apiKey: resolveApiKey(REPO_DOT_ENV) });
 client.ensureAuthenticated();
 
 console.log("Smoke check 1: one Jev evaluate call through the gateway (confirms the typesafe-ai provider is enabled)...");

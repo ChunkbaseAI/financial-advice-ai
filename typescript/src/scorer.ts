@@ -6,7 +6,7 @@ import {
   type EvaluationManifest,
   type EvaluationRecord,
 } from "./run_record_schema.ts";
-import { CATEGORIES, type Category, type CaseSet, type ExpectedVerdict } from "./case_set_schema.ts";
+import { CATEGORIES, isRecord, type Category, type CaseSet, type ExpectedVerdict } from "./case_set_schema.ts";
 import { VALUE_PRESENCE_PASS_CATEGORIES } from "./value_presence.ts";
 
 export interface ScoredCard {
@@ -77,7 +77,7 @@ export interface ArmSummary {
 }
 
 export interface FailureEntry {
-  kind: "dangerous-pass" | "nuisance-flag";
+  kind: "dangerous-pass" | "nuisance-flag" | "execution-error";
   cardId: string;
   repeat: number;
   category: Category;
@@ -112,7 +112,7 @@ export interface ScoredRun {
   calibration: Calibration | null;
 }
 
-function median(values: number[]): number {
+export function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -135,10 +135,6 @@ function roundCost(amount: number): number {
   return Math.round(amount * 1e12) / 1e12;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function quoteOf(record: EvaluationRecord): string {
   const parsed = record.attempts[record.attempts.length - 1]?.parsed_answer;
   const reasons: string[] = [];
@@ -151,6 +147,21 @@ function quoteOf(record: EvaluationRecord): string {
   walk(parsed);
   if (reasons.length > 0) return reasons.join(" | ");
   return parsed === null || parsed === undefined ? "(no parsed answer)" : JSON.stringify(parsed);
+}
+
+function executionQuoteOf(record: EvaluationRecord): string {
+  for (const attempt of [...record.attempts].reverse()) {
+    const raw = attempt.raw_response;
+    if (!isRecord(raw)) continue;
+    const choices = Array.isArray(raw.choices) ? raw.choices : [];
+    const first = isRecord(choices[0]) ? choices[0] : {};
+    const message = isRecord(first.message) ? first.message : {};
+    if (typeof message.content === "string" && message.content.length > 0) {
+      const finish = typeof first.finish_reason === "string" ? ` (finish_reason: ${first.finish_reason})` : "";
+      return `${record.error?.message ?? "execution error"}${finish}; last preserved response began: ${message.content.slice(0, 160)}`;
+    }
+  }
+  return record.error?.message ?? "execution error";
 }
 
 function claimOf(record: EvaluationRecord): string {
@@ -301,6 +312,23 @@ export function scoreArmRun(runDir: string, cards: ScoredCard[]): ScoredRun {
       expected: card.expected,
       claim: claimOf(record),
       quote: quoteOf(record),
+    });
+  }
+  const executionErrors = records
+    .filter((r) => r.error !== null && r.error.kind !== "input-preparation")
+    .sort((a, b) => (a.card_id === b.card_id ? a.repeat_index - b.repeat_index : a.card_id < b.card_id ? -1 : 1));
+  const seenExecution = new Set<string>();
+  for (const record of executionErrors) {
+    if (seenExecution.has(record.card_id)) continue;
+    seenExecution.add(record.card_id);
+    failures.push({
+      kind: "execution-error",
+      cardId: record.card_id,
+      repeat: record.repeat_index,
+      category: cardById.get(record.card_id)?.category ?? "correct",
+      expected: cardById.get(record.card_id)?.expected ?? "supported",
+      claim: claimOf(record),
+      quote: executionQuoteOf(record),
     });
   }
   const nuisanceCards = cards

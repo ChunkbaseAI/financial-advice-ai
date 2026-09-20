@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { combineChecks, mapLlmOverall, mapLlmThree, mapNoul, mapOwnership, type CheckOutcome, type GateThresholds } from "../src/decision_mapping.ts";
+import { combineChecks, mapCategoricalVerdict, mapLlmThree, mapNoul, mapOwnership, type CheckOutcome, type GateThresholds } from "../src/decision_mapping.ts";
 
 const thresholds: GateThresholds = {
   noulPassAtOrAbove: 0.9,
@@ -138,10 +138,10 @@ describe("mapLlmThree", () => {
   });
 });
 
-describe("mapLlmOverall", () => {
+describe("mapCategoricalVerdict", () => {
   test("only a supported verdict passes", () => {
-    expect(mapLlmOverall("supported")).toMatchObject({ outcome: "pass", verdict: "supported", review_reason: null });
-    expect(mapLlmOverall("unsupported")).toMatchObject({ outcome: "review", verdict: "unsupported", review_reason: "unsupported" });
-    expect(mapLlmOverall("uncertain")).toMatchObject({ outcome: "review", verdict: "uncertain", review_reason: "uncertain" });
+    expect(mapCategoricalVerdict("supported")).toMatchObject({ outcome: "pass", verdict: "supported", review_reason: null });
+    expect(mapCategoricalVerdict("unsupported")).toMatchObject({ outcome: "review", verdict: "unsupported", review_reason: "unsupported" });
+    expect(mapCategoricalVerdict("uncertain")).toMatchObject({ outcome: "review", verdict: "uncertain", review_reason: "uncertain" });
   });
 });

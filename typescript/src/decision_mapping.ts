@@ -78,7 +78,7 @@ export function mapLlmThree(answers: Record<CheckName, LlmVerdict>): CardDecisio
   });
 }
 
-export function mapLlmOverall(verdict: LlmVerdict): CardDecision {
+export function mapCategoricalVerdict(verdict: LlmVerdict): CardDecision {
   if (verdict === "supported") return { checks: null, outcome: "pass", verdict: "supported", review_reason: null };
   return { checks: null, outcome: "review", verdict, review_reason: verdict };
 }

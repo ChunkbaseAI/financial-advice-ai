@@ -53,7 +53,7 @@ If a subject ID cannot be resolved to exactly one roster name, the card records 
 
 ## Outcomes and the retry policy
 
-A card passes only when all three checks pass; the passing outcome is named "passed these three checks", never "fully verified". Any mismatch, uncertainty or unsupported check sends the card to review, with the most severe failing check as the review reason (unsupported > mismatch > uncertain). "Unsupported" means the source lacks or contradicts the claimed support — never "proven wrong".
+A card passes only when all three checks pass; the passing outcome is named "passed these three checks", never "fully verified". Any mismatch, uncertainty or unsupported check sends the card to review, with the most severe failing check as the review reason (unsupported > mismatch > uncertain). "Unsupported" means the source lacks or contradicts the claimed support — never "proven wrong". The `mismatch` review reason is the ownership check's outcome when the source attributes the value to a different specific subject at or above the threshold; it is a check outcome, not the domain's Conflict concept (two Claims that cannot all be accepted), for which CONTEXT.md rightly avoids the word "mismatch".
 
 Invalid output is retried exactly once with the frozen retry instruction; both responses are preserved, all cost and elapsed time including the failed attempt is counted, and two failed attempts are an **Execution Error** — never a pass or a caught mistake. A valid answer is never retried for disagreeing with the answer key. HTTP 429 uses the recorded exponential backoff; the plain-fetch client has no hidden SDK retries.
 

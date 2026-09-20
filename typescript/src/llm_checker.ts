@@ -1,7 +1,7 @@
 import type { CheckName, CheckerProtocol, LlmVerdict } from "./checker_protocol.ts";
 import type { ModelInput } from "./input_preparation.ts";
-import { mapLlmOverall, mapLlmThree, type CardDecision } from "./decision_mapping.ts";
-import { GatewayClient, type ChatCompletionRequest } from "./gateway_client.ts";
+import { mapCategoricalVerdict, mapLlmThree, type CardDecision } from "./decision_mapping.ts";
+import { GatewayClient, gatewayRoutingOf, isRecord, type ChatCompletionRequest } from "./gateway_client.ts";
 import { callWithBackoff } from "./gateway_backoff.ts";
 import { runWithRetryPolicy, type AttemptOutcome } from "./retry_policy.ts";
 import type { CheckerCardResult } from "./evaluation_recorder.ts";
@@ -24,10 +24,6 @@ export interface LlmDeps {
 export type ParsedLlmAnswer =
   | { kind: "overall"; verdict: LlmVerdict; reason: string | null }
   | { kind: "three"; answers: Record<CheckName, { verdict: LlmVerdict; reason: string | null }> };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 const VERDICTS: readonly string[] = ["supported", "unsupported", "uncertain"];
 
@@ -104,7 +100,7 @@ export function buildLlmRequest(
 }
 
 function decisionFromParsedAnswer(parsed: ParsedLlmAnswer): CardDecision {
-  if (parsed.kind === "overall") return mapLlmOverall(parsed.verdict);
+  if (parsed.kind === "overall") return mapCategoricalVerdict(parsed.verdict);
   return mapLlmThree({
     ownership: parsed.answers.ownership.verdict,
     value_support: parsed.answers.value_support.verdict,
@@ -126,10 +122,8 @@ function modelReportFromResponse(spec: LlmArmSpec, attempts: CheckerCardResult["
 }
 
 function providerFromAttempt(attempt: { raw_response: unknown } | undefined): string {
-  if (!attempt || !isRecord(attempt.raw_response)) return "";
-  const providerMetadata = isRecord(attempt.raw_response.provider_metadata) ? attempt.raw_response.provider_metadata : {};
-  const gateway = isRecord(providerMetadata.gateway) ? providerMetadata.gateway : {};
-  const routing = isRecord(gateway.routing) ? gateway.routing : {};
+  if (!attempt) return "";
+  const routing = gatewayRoutingOf(attempt.raw_response);
   return typeof routing.resolvedProvider === "string" ? routing.resolvedProvider : "";
 }
 

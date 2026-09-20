@@ -287,7 +287,7 @@ export interface EvaluationRecordError {
   status?: number;
 }
 
-export interface EvaluationDecision extends CardDecision {}
+export type EvaluationDecision = CardDecision;
 
 export interface EvaluationRecord {
   format_version: number;

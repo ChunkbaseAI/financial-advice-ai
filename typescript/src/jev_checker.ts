@@ -11,7 +11,7 @@ import {
   type JevChoiceAnswer,
   type JevNoulAnswer,
 } from "./decision_mapping.ts";
-import { GatewayClient, type SystemOneRequest } from "./gateway_client.ts";
+import { GatewayClient, gatewayGenerationIdOf, gatewayRoutingOf, isRecord, type SystemOneRequest } from "./gateway_client.ts";
 import { callWithBackoff } from "./gateway_backoff.ts";
 import { runWithRetryPolicy, type AttemptOutcome } from "./retry_policy.ts";
 import type { CheckerCardResult } from "./evaluation_recorder.ts";
@@ -70,10 +70,6 @@ export function buildJevRequest(protocol: CheckerProtocol, roster: Roster, card:
       },
     },
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function parseJevAnswers(answers: unknown): ParsedJevAnswers | null {
@@ -193,18 +189,15 @@ export function rawAnswerFromAttempts(attempts: EvaluationAttempt[]): unknown {
 function modelFromLastAttempt(protocol: CheckerProtocol, attempts: EvaluationAttempt[]): CheckerCardResult["model"] {
   const last = attempts[attempts.length - 1];
   const body = last?.raw_response;
-  if (!isRecord(body)) return null;
-  const providerMetadata = isRecord(body.provider_metadata) ? body.provider_metadata : {};
-  const gateway = isRecord(providerMetadata.gateway) ? providerMetadata.gateway : {};
-  const routing = isRecord(gateway.routing) ? gateway.routing : {};
-  const modelVersion = typeof body.model === "string" ? body.model : null;
-  if (modelVersion === null) return null;
+  if (!isRecord(body) || typeof body.model !== "string") return null;
+  const routing = gatewayRoutingOf(body);
   const report: CheckerCardResult["model"] = {
     id: protocol.jev.model_id,
-    version: modelVersion,
+    version: body.model,
     provider: typeof routing.resolvedProvider === "string" ? routing.resolvedProvider : "",
   };
-  if (typeof gateway.generationId === "string") report.generation_id = gateway.generationId;
+  const generationId = gatewayGenerationIdOf(body);
+  if (generationId !== null) report.generation_id = generationId;
   return report;
 }
 

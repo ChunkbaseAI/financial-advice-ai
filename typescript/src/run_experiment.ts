@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   DEFAULT_PROTOCOL_LOCK_PATH,
@@ -10,29 +9,10 @@ import {
 import { DEFAULT_CASE_SET_LOCK_PATH, DEFAULT_CASE_SET_PATH, loadCaseSet } from "./case_set_schema.ts";
 import { DEFAULT_ROSTER_LOCK_PATH, DEFAULT_ROSTER_PATH, loadRoster } from "./roster.ts";
 import { allArms, runArm } from "./experiment_runner.ts";
-import { apiKeyFromEnv, GatewayClient, loadDotEnvFile } from "./gateway_client.ts";
+import { argValue, GatewayClient, resolveApiKey } from "./gateway_client.ts";
 
 const DEFAULT_EXPERIMENT_DIR = fileURLToPath(new URL("../../fixtures/experiment_v1/", import.meta.url));
 const REPO_DOT_ENV = fileURLToPath(new URL("../../.env", import.meta.url));
-
-function argValue(flag: string): string | undefined {
-  const argv = process.argv.slice(2);
-  const index = argv.indexOf(flag);
-  return index === -1 ? undefined : argv[index + 1];
-}
-
-function resolveApiKey(): string {
-  if (process.env.AI_GATEWAY_API_KEY !== undefined && process.env.AI_GATEWAY_API_KEY.trim().length > 0) {
-    return apiKeyFromEnv(process.env as Record<string, string | undefined>);
-  }
-  let dotenv: Record<string, string> = {};
-  try {
-    dotenv = loadDotEnvFile(readFileSync(REPO_DOT_ENV, "utf8"));
-  } catch {
-    // no .env file; the error below names the expected locations
-  }
-  return apiKeyFromEnv({ ...dotenv, AI_GATEWAY_API_KEY: dotenv["AI_GATEWAY_API_KEY"] ?? "" });
-}
 
 const armName = argValue("--arm");
 if (armName === undefined) {
@@ -71,7 +51,7 @@ if (!Number.isInteger(repeatCount) || repeatCount < 1) {
 
 const outputDir = argValue("--out") ?? `${DEFAULT_EXPERIMENT_DIR}${arm.name}`;
 const networked = arm.variant !== "rules";
-const client = networked ? new GatewayClient({ apiKey: resolveApiKey() }) : undefined;
+const client = networked ? new GatewayClient({ apiKey: resolveApiKey(REPO_DOT_ENV) }) : undefined;
 const concurrencyArg = argValue("--concurrency");
 const concurrency = concurrencyArg !== undefined ? Number.parseInt(concurrencyArg, 10) : 4;
 if (!Number.isInteger(concurrency) || concurrency < 1) {
