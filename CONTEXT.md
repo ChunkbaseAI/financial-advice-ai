@@ -51,3 +51,33 @@ _Avoid_: Completed fact-find, client record
 **Provider Adapter**:
 A boundary that translates a provider's API and semantics while preserving provider-native identity, permissions, unsupported fields, and receipts.
 _Avoid_: Connector, wrapper
+
+## Checker experiment language
+
+**Protocol**:
+The frozen, versioned contract of checker questions, answer options, thresholds, prompts, retry rules, and input-rendering rules that governs an experiment run. Any change requires a new version and a rerun.
+_Avoid_: Prompt template, config
+
+**Passed These Three Checks**:
+The honest name for a Claim outcome where every frozen check supported the card. It does not mean the Claim is fully verified.
+_Avoid_: Fully verified, validated
+
+**Unsupported**:
+A check outcome where the source lacks or contradicts the claimed support. Missing evidence and proven-wrong are different things; this term claims only the former.
+_Avoid_: Proven wrong, incorrect
+
+**Action Flip**:
+A single card whose outcome switches between pass and review across repeat evaluations of the same frozen inputs.
+_Avoid_: Instability, vote change
+
+**Verdict Change**:
+A card whose review-bound verdict changes between repeats (for example unsupported to uncertain) without switching between pass and review.
+_Avoid_: Flip (reserve Action Flip for pass/review switches)
+
+**Execution Error**:
+A failure to obtain a usable checker response, such as missing, malformed, or retry-exhausted output. Recorded separately from detected factual errors and never counted as a pass.
+_Avoid_: Failed check, false negative
+
+**Input-Preparation Error**:
+A failure while preparing the model-visible input, such as a subject ID that cannot be resolved to exactly one name. Recorded before any checker call and never guessed or silently dropped.
+_Avoid_: Bad input, skipped card
