@@ -27,7 +27,7 @@
   },
   "input_rendering": {
     "whos_who": {
-      "rule": "Identity-only line naming the household's people in subject-id order, with no ownership hints. Policies are never listed here.",
+      "rule": "Identity-only line naming the household's people in subject-id order, joined with '; ', with no ownership hints. Policies are never listed here.",
       "template": "People in this household: {names}."
     },
     "claim": {
@@ -62,7 +62,11 @@
     "card_outcome": {
       "pass": "A card passes only when ownership, value_support and time_support all pass. The passing outcome is named 'passed these three checks', never 'fully verified'.",
       "review": "Any mismatch, uncertainty or unsupported check sends the card to review.",
-      "review_reason_severity": ["unsupported", "mismatch", "uncertain"],
+      "review_reason_severity": [
+        "unsupported",
+        "mismatch",
+        "uncertain"
+      ],
       "review_reason_tiebreak": "When several checks fail, the review reason is the most severe failing check; ties break by check order: ownership, value_support, time_support."
     },
     "llm_categorical": "LLM verdicts are categorical (supported / unsupported / uncertain); only supported passes. Jev's probability-gated acceptance and the LLMs' categorical verdicts are different decision policies and are labelled as such in the results."
@@ -112,7 +116,11 @@
     "structured_output": "response_format json_schema with strict schemas on the chat completions endpoint; schema-constrained, not 'please return JSON'.",
     "max_output_tokens_reasoned": 300,
     "max_output_tokens_verdict_only": 100,
-    "verdicts": ["supported", "unsupported", "uncertain"],
+    "verdicts": [
+      "supported",
+      "unsupported",
+      "uncertain"
+    ],
     "prompts": {
       "input_placeholder": "{input_json}",
       "overall": "You are checking a drafted Claim about a household's finances against evidence quoted from that household's source documents.\n\n<input>\n{input_json}\n</input>\n\nThe Claim is the proposition in \"claim\", about the subject named in \"claim.subject\". The only evidence is the quoted spans in \"evidence\"; anything not present in them is not support. The same number appearing for a different person, policy, field, basis or time status is not support for this Claim.\n\nQuestion: does the source support this card?\n\n- \"supported\": the evidence explicitly supports the Claim's subject, value, field, basis and time status as claimed.\n- \"unsupported\": the evidence contradicts the Claim, or does not state what the Claim asserts.\n- \"uncertain\": you cannot tell from the evidence.\n\nAnswer \"supported\" only when the evidence supports every part of the Claim.",
@@ -123,18 +131,40 @@
       "overall": {
         "type": "object",
         "properties": {
-          "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] },
-          "reason": { "type": "string", "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning." }
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "uncertain"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "One short sentence explaining the verdict. This is the model's stated explanation, not evidence of its internal reasoning."
+          }
         },
-        "required": ["verdict", "reason"],
+        "required": [
+          "verdict",
+          "reason"
+        ],
         "additionalProperties": false
       },
       "overall_verdict_only": {
         "type": "object",
         "properties": {
-          "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] }
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "unsupported",
+              "uncertain"
+            ]
+          }
         },
-        "required": ["verdict"],
+        "required": [
+          "verdict"
+        ],
         "additionalProperties": false
       },
       "three_question": {
@@ -146,36 +176,78 @@
               "ownership": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] },
-                  "reason": { "type": "string" }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
                 },
-                "required": ["verdict", "reason"],
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
                 "additionalProperties": false
               },
               "value_support": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] },
-                  "reason": { "type": "string" }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
                 },
-                "required": ["verdict", "reason"],
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
                 "additionalProperties": false
               },
               "time_support": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] },
-                  "reason": { "type": "string" }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
                 },
-                "required": ["verdict", "reason"],
+                "required": [
+                  "verdict",
+                  "reason"
+                ],
                 "additionalProperties": false
               }
             },
-            "required": ["ownership", "value_support", "time_support"],
+            "required": [
+              "ownership",
+              "value_support",
+              "time_support"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["answers"],
+        "required": [
+          "answers"
+        ],
         "additionalProperties": false
       },
       "three_question_verdict_only": {
@@ -187,33 +259,66 @@
               "ownership": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
                 },
-                "required": ["verdict"],
+                "required": [
+                  "verdict"
+                ],
                 "additionalProperties": false
               },
               "value_support": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
                 },
-                "required": ["verdict"],
+                "required": [
+                  "verdict"
+                ],
                 "additionalProperties": false
               },
               "time_support": {
                 "type": "object",
                 "properties": {
-                  "verdict": { "type": "string", "enum": ["supported", "unsupported", "uncertain"] }
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "unsupported",
+                      "uncertain"
+                    ]
+                  }
                 },
-                "required": ["verdict"],
+                "required": [
+                  "verdict"
+                ],
                 "additionalProperties": false
               }
             },
-            "required": ["ownership", "value_support", "time_support"],
+            "required": [
+              "ownership",
+              "value_support",
+              "time_support"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["answers"],
+        "required": [
+          "answers"
+        ],
         "additionalProperties": false
       }
     }
@@ -223,7 +328,8 @@
     "retry_on": "invalid output only: unparseable JSON, or output that fails the required schema",
     "never_retry": "A valid answer is never retried because it disagrees with the answer key. Two failed attempts are an execution error, never a pass or a caught mistake.",
     "counting": "Both responses are preserved; all cost and elapsed time including the failed attempt is counted; first-attempt failures and failures remaining after retry are reported separately.",
-    "transport": "HTTP 429 uses the recorded exponential backoff (3 attempts, 500 ms base) before any recorded attempt; the client performs no other silent retries."
+    "transport": "HTTP 429 uses the recorded exponential backoff (3 attempts, 500 ms base) before any recorded attempt; the client performs no other silent retries.",
+    "jev": "For Jev, invalid output means missing or malformed answers (rare: answers are schema-constrained). The retry re-sends the identical typed questions; there is no text format to correct."
   },
   "outcomes": {
     "pass_name": "passed these three checks",

@@ -108,9 +108,11 @@ describe("validateEvaluationRecord", () => {
     expect(validateEvaluationRecord(record)).toEqual([]);
   });
 
-  test("accepts an input-preparation error record with no attempts, model or usage", () => {
+  test("accepts an input-preparation error record with no input, attempts, model or usage", () => {
     const record = evaluation({
       model: null,
+      model_input: null,
+      input_hash: null,
       attempts: [],
       first_attempt_invalid: false,
       retried: false,
@@ -270,7 +272,15 @@ describe("version dispatch keeps the v1 formats intact", () => {
 
   test("v1 error kinds stay closed and v2 adds input-preparation for evaluation records only", () => {
     expect(ERROR_KINDS).not.toContain("input-preparation");
-    const v2Error = evaluation({ error: { kind: "input-preparation", message: "x" }, decision: null, model: null, attempts: [], usage: null });
+    const v2Error = evaluation({
+      error: { kind: "input-preparation", message: "x" },
+      decision: null,
+      model: null,
+      model_input: null,
+      input_hash: null,
+      attempts: [],
+      usage: null,
+    });
     expect(validateEvaluationRecord(v2Error)).toEqual([]);
     expect(() => {
       throw new RunRecordValidationError("record", ["x"]);

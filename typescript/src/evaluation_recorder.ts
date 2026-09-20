@@ -49,8 +49,8 @@ export interface EvaluationRecordInput extends CheckerCardResult {
   repeatIndex: number;
   cardId: string;
   originalClaim: Claim;
-  modelInput: ModelInput;
-  inputHash: string;
+  modelInput: ModelInput | null;
+  inputHash: string | null;
 }
 
 export function evaluationUsageAggregate(attempts: EvaluationAttempt[]): GatewayUsage | null {

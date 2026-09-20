@@ -1,7 +1,7 @@
 {
   "protocol_file": "checker_protocol_v0_1.json",
   "protocol_version": "0.1.0",
-  "sha256": "9e5ac64f4ef56cfef1e066efaf5a35985c0d03f15e1d473f2ea06d65aaae4b43",
+  "sha256": "7205b4e41b2548602f0a1fba4ee4c7dcc4c2cefeadeaa05ed1f56cf11680185e",
   "case_set_file": "case_set_v1.json",
   "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
   "roster_file": "roster_v1.json",

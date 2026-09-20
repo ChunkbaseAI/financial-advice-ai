@@ -294,8 +294,8 @@ export interface EvaluationRecord {
   protocol_version: string;
   protocol_sha256: string;
   original_claim: Claim;
-  model_input: ModelInput;
-  input_hash: string;
+  model_input: ModelInput | null;
+  input_hash: string | null;
   model: ModelReport | null;
   raw_answer: unknown;
   attempts: EvaluationAttempt[];
@@ -427,12 +427,22 @@ export function validateEvaluationRecord(data: unknown): string[] {
     violations.push("protocol_sha256: must be 64 lowercase hex characters");
   }
   validateOriginalClaim(data.original_claim, violations, "original_claim");
-  if (!isRecord(data.model_input)) violations.push("model_input: must be the exact model-visible input");
+  const isInputPreparationError = isRecord(data.error) && data.error.kind === "input-preparation";
+  if (isInputPreparationError) {
+    if (data.model_input !== null && data.model_input !== undefined) {
+      violations.push("model_input: an input-preparation error has no model-visible input to record");
+    }
+    if (data.input_hash !== null && data.input_hash !== undefined) {
+      violations.push("input_hash: an input-preparation error has no model-visible input to hash");
+    }
+  } else {
+    if (!isRecord(data.model_input)) violations.push("model_input: must be the exact model-visible input");
+    if (typeof data.input_hash !== "string" || !PROMPT_HASH.test(data.input_hash)) {
+      violations.push('input_hash: must be "sha256:" followed by 64 lowercase hex characters over the model-visible input');
+    }
+  }
   if (!("raw_answer" in data)) {
     violations.push("raw_answer: must be present, carrying the deterministic answer or null for model arms");
-  }
-  if (typeof data.input_hash !== "string" || !PROMPT_HASH.test(data.input_hash)) {
-    violations.push('input_hash: must be "sha256:" followed by 64 lowercase hex characters over the model-visible input');
   }
 
   if (!("model" in data)) {
