@@ -1,0 +1,19 @@
+{
+  "format_version": 1,
+  "signed_off_at": "2026-09-20",
+  "signed_off_by": "maintainer (repository owner, in session)",
+  "protocol_version": "0.1.0",
+  "protocol_sha256_note": "recorded in checker_protocol_v0_1.lock.json",
+  "estimate": "fixtures/experiment_v1/cost_estimate.json",
+  "estimate_totals": {
+    "networked_calls": 1800,
+    "expected_cost_usd": 1.3587,
+    "worst_case_cost_usd": 2.7173
+  },
+  "spending_cap_usd": 5.0,
+  "conditions": [
+    "Paid credits added to the experiment gateway key so the four pinned LLM arms are served.",
+    "The four pinned models stay as pinned; no substitution.",
+    "All arms run back to back on the same day; the batch stops if actual spend reaches the cap."
+  ]
+}

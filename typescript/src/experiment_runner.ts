@@ -89,6 +89,8 @@ export interface RunArmParams {
   /** Wait before polling generation lookups; the gateway ingests usage events asynchronously. */
   generationIngestionDelayMs?: number | undefined;
   sleep?: ((ms: number) => Promise<void>) | undefined;
+  /** Cards evaluated concurrently within a repeat; the protocol freezes inputs and repeats, not scheduling. */
+  concurrency?: number | undefined;
 }
 
 export interface RunArmResult {
@@ -187,8 +189,12 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
   }
   const pending: PendingRecord[] = [];
 
+  const concurrency = params.concurrency ?? 4;
+
   for (let repeatIndex = 0; repeatIndex < params.repeatCount; repeatIndex += 1) {
-    for (const p of prepared) {
+    const pendingThisRepeat: PendingRecord[] = new Array(prepared.length);
+
+    const worker = async (p: PreparedCard, sampleIndex: number): Promise<void> => {
       let result: CheckerCardResult;
       if (p.preparationError !== null) {
         result = {
@@ -223,11 +229,7 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
         );
       }
 
-      if (result.error !== null && result.error.kind !== "input-preparation") executionErrors += 1;
-      if (result.decision?.outcome === "pass") passed += 1;
-      if (result.decision?.outcome === "review") reviewed += 1;
-
-      pending.push({
+      pendingThisRepeat[sampleIndex] = {
         sampleIndex: p.sampleIndex,
         repeatIndex,
         cardId: p.card.id,
@@ -235,10 +237,22 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
         modelInput: p.input,
         inputHash: p.inputHash,
         result,
-      });
+      };
       done += 1;
       params.onProgress?.(done, total);
-    }
+    };
+
+    let next = 0;
+    const runners = Array.from({ length: Math.max(1, Math.min(concurrency, prepared.length)) }, async () => {
+      while (true) {
+        const index = next;
+        next += 1;
+        if (index >= prepared.length) break;
+        await worker(prepared[index]!, index);
+      }
+    });
+    await Promise.all(runners);
+    pending.push(...pendingThisRepeat);
   }
 
   if (networked) {
@@ -250,6 +264,12 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
     passed = completed.passed;
     reviewed = completed.reviewed;
     executionErrors = completed.executionErrors;
+  } else {
+    for (const p of pending) {
+      if (p.result.error !== null && p.result.error.kind !== "input-preparation") executionErrors += 1;
+      if (p.result.decision?.outcome === "pass") passed += 1;
+      if (p.result.decision?.outcome === "review") reviewed += 1;
+    }
   }
 
   for (const p of pending) {

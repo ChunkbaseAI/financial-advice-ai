@@ -83,6 +83,8 @@ describe("runArm (rules, offline)", () => {
     const result = await runArm(baseParams({ repeatCount: 2, outputDir: dir }));
 
     expect(result.recordCount).toBe(100);
+    expect(result.passed + result.reviewed).toBe(100);
+    expect(result.inputPreparationErrors).toBe(0);
     const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
     expect(manifest.protocol_version).toBe("0.1.0");
     expect(manifest.protocol_sha256).toBe(freeze.protocolSha256);

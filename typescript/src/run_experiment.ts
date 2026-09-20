@@ -72,6 +72,12 @@ if (!Number.isInteger(repeatCount) || repeatCount < 1) {
 const outputDir = argValue("--out") ?? `${DEFAULT_EXPERIMENT_DIR}${arm.name}`;
 const networked = arm.variant !== "rules";
 const client = networked ? new GatewayClient({ apiKey: resolveApiKey() }) : undefined;
+const concurrencyArg = argValue("--concurrency");
+const concurrency = concurrencyArg !== undefined ? Number.parseInt(concurrencyArg, 10) : 4;
+if (!Number.isInteger(concurrency) || concurrency < 1) {
+  console.error("--concurrency must be an integer of at least 1");
+  process.exit(1);
+}
 
 console.log(`Running arm ${arm.name}`);
 console.log(`  checker:      ${arm.checker}${arm.modelId === null ? "" : ` (${arm.modelId})`}`);
@@ -93,6 +99,7 @@ const result = await runArm({
   repeatCount,
   outputDir,
   client,
+  concurrency,
   onProgress: (done, total) => {
     if (done % 10 === 0 || done === total) console.log(`  progress: ${done}/${total} evaluations`);
   },
