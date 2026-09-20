@@ -50,6 +50,7 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
   const runDates = [...scoredRuns, ...timingRuns].map((run) => run.manifest.created_at.slice(0, 10));
   const runDay = new Set(runDates).size === 1 ? runDates[0]! : `${minDate(runDates)} to ${maxDate(runDates)}`;
   const totalSpend = scoredRuns.concat(timingRuns).reduce((sum, run) => sum + run.summary.totalCost, 0);
+  const totalMarketSpend = scoredRuns.concat(timingRuns).reduce((sum, run) => sum + run.summary.marketCostTotal, 0);
 
   push("# Checker experiment results v1");
   push();
@@ -66,7 +67,8 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
   push(`- Case set ${scoredRuns[0]?.manifest.case_set_version ?? "?"} at sha256 ${scoredRuns[0]?.manifest.case_set_sha256 ?? ""}`);
   push(`- Sample: ${caseSetCards} cards, ${repeatCount} repeat(s) per scored arm`);
   push(`- All scored arms ran back to back on ${runDay}`);
-  push(`- Total gateway-reported spend across all arms: ${usd(totalSpend)}`);
+  push(`- Total gateway-reported charged spend across all arms: ${usd(totalSpend)} (0 where calls are covered by credits)`);
+  push(`- Total gateway-reported list-price (market) spend across all arms: ${usd(totalMarketSpend)}`);
   push();
 
   push("## Limitations");
@@ -239,6 +241,47 @@ export function renderResultsDocument(input: ResultsDocumentInput): string {
     push();
   }
 
+  push("## What the comparison shows");
+  push();
+  push(
+    "Reading the headline table with the category grid together, under the frozen protocol and its limitations:",
+  );
+  push();
+  push(
+    "- The rules checker passes 17 of 25 corrupted cards per repeat (median): every wrong-subject, stale-value, hypothetical and wrong-basis card, exactly the dangerous passes the case set was built to demonstrate. Value-presence matching is not checking.",
+  );
+  push(
+    "- Jev, gated at the frozen 0.90/0.10 lines, sent every corrupted card to review in every repeat (0 dangerous passes) and caught the sneaky categories the rules checker passes: wrong-subject, stale-value, hypothetical and wrong-basis all at 100%. Its cost was the lowest of any networked arm and its latency the lowest of any arm.",
+  );
+  push(
+    "- Jev's price was nuisance flags: at the 0.90 threshold only about 8% of correct cards passed these three checks per repeat, mostly because its value-support and time-support probabilities sit between the thresholds. The exploratory calibration section shows the top band is not overconfident (a 0.90+ probability always came with the value truly present in these runs), so the nuisance flags point at the threshold, not at wrong high-confidence answers; where that line should sit is a question for a larger labelled set, not these three repeats.",
+  );
+  push(
+    "- The generative checkers sit between: claude-sonnet-5-overall and both gemini arms passed 0 corrupted cards, while claude-haiku-4.5-overall and gpt-5.4-mini (both configurations) passed hypothetical or wrong-basis cards. Every arm that caught all corrupted cards did so by flagging some correct ones too; no arm passed every correct card while catching everything, and a cautious checker must not look better merely for flagging everything.",
+  );
+  push(
+    "- The three-question configurations caught the same or more than their overall counterparts but flagged more correct cards and cost roughly 1.5-3x per card: decomposition helped the catch rate of the cheaper models (haiku, gpt) and hurt the nuisance rate of the stronger ones.",
+  );
+  push(
+    "- gemini-3.8-flash-three is the structured-output failure case: 23 of 150 evaluations died after both attempts hit the 1000-token output limit (finish_reason length; verbose reasons). Those are execution errors, shown with their denominators, never counted as passes or catches.",
+  );
+  push();
+  push("## Protocol history");
+  push();
+  push(
+    "Three frozen protocol versions produced this document, each bump forced by a failure that changed the design, with every superseded run preserved:",
+  );
+  push();
+  push(
+    "- 0.1.0 -> 0.2.0: the 300-token reasoned output limit truncated three-question responses (111/150 execution errors on the claude-sonnet-5-three pre-batch run); 0.2.0 raised it to 1000 and the batch was rerun.",
+  );
+  push(
+    "- 0.2.0 -> 0.3.0: the 100-token verdict-only limit truncated gemini-3.8-flash timing responses with empty content (hidden reasoning tokens precede visible output); 0.3.0 raised it to 1000 and the timing arms were rerun. The change touches a parameter scored arms never use, and 0.3.0 declares 0.2.0 scored runs compatible by hash; the scorer verifies that declaration.",
+  );
+  push(
+    "- The pre-batch free-tier blocker (all four pinned LLMs returned 403 RestrictedModelsError until credits were added) is documented in the experiment write-up, not the records: no model was substituted.",
+  );
+  push();
   push("## What these runs do not show");
   push();
   push(

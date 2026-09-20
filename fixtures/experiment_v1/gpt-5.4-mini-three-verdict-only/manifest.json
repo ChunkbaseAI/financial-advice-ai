@@ -1,0 +1,25 @@
+{
+  "format_version": 2,
+  "run_id": "gpt-5.4-mini-three-verdict-only-20260920-1014c85",
+  "created_at": "2026-09-20T06:29:44.568Z",
+  "case_set_version": "1.0.0",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "protocol_version": "0.3.0",
+  "protocol_sha256": "35938ce4b832eeddf63a51fc4bbb202a1995ae58f8724419fb44ee89bcc8fc49",
+  "roster_version": "1.0.0",
+  "roster_sha256": "e44caa75cf33ecb90c18d16bff86a5b1b0beaaa32f73bb8d17a0fcfc6381eea1",
+  "code_commit": "1014c85b17fdb485d2c861346ad17fb08a75c803",
+  "repeat_count": 1,
+  "input_set_sha256": "5191c25077e906cabb90483cf671b1721352de1d8f8178fff3dfa779e21eda6f",
+  "checkers": [
+    "gpt-5.4-mini-three-verdict-only"
+  ],
+  "arm": {
+    "name": "gpt-5.4-mini-three-verdict-only",
+    "checker": "gpt-5.4-mini",
+    "model_id": "openai/gpt-5.4-mini",
+    "variant": "three-question",
+    "decision_policy": "categorical-verdict",
+    "timing_run": true
+  }
+}

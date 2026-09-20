@@ -70,9 +70,9 @@ cd typescript && bun install && bun test        # offline: protocol, roster, thr
 cd typescript && bun run typecheck
 cd typescript && bun run experiment:estimate    # pre-run cost estimate from the actual inputs (network: public pricing, no credentials)
 cd typescript && bun src/smoke_gateway.ts       # one Jev + one schema-constrained chat call; network + AI_GATEWAY_API_KEY
-cd typescript && bun run experiment:run -- --arm rules          # offline arm
+cd typescript && bun run experiment:run -- --arm rules          # offline arm (refuses to overwrite the recorded run)
 cd typescript && bun run experiment:run -- --arm jev            # networked arms (AI_GATEWAY_API_KEY in .env at the repo root)
-cd typescript && bun run experiment:score        # deterministic scorer: records -> docs/checker-experiment-results.md, zero model calls
+cd typescript && bun run experiment:score       # deterministic scorer: records -> docs/checker-experiment-results.md, zero model calls
 ```
 
 (Verified with Bun 1.3.13, TypeScript 7.0.2, zero runtime dependencies.) Networked arms fail with a useful message when `AI_GATEWAY_API_KEY` is absent. The scorer refuses to score runs recorded under a different protocol or case set.
@@ -91,9 +91,17 @@ The estimate is computed from the actual frozen inputs (largest request per arm,
 
 The protocol's frozen limitations bound every published number: 50 synthetic cards from one author; per-category counts of 3-5 cannot support per-category accuracy claims; three repeats establish spread, not stability; calibration findings are exploratory; the thresholds are experimental starting lines; different decision policies make the comparison a catch/cost trade-off, not a like-for-like accuracy claim; token estimates for the pre-run figure use an approximation, not a tokenizer; no extraction, no generation, no suitability or compliance claim; single case set, single run day, no cross-vendor leaderboard or "first" claim.
 
-## What has run so far
+## What ran
 
-Nothing in this document describes a completed model run. At the time of writing: the protocol, roster, case set and estimate are frozen; the offline machinery is tested; the smoke check confirmed the `typesafe-ai` provider serves Jev through the gateway. The four pinned LLM models returned HTTP 403 `RestrictedModelsError` on the experiment key's free-tier credits; per the issue brief no model is substituted silently, so the batch waits for the maintainer to add paid credits (or to re-pin models in a new protocol version). When the batch runs, every arm runs back to back on the same day and the results document above is generated from the records.
+The full batch ran back to back on 2026-09-20: ten scored arms (3 fresh repeats each over the 50 cards) and nine verdict-only timing arms, all through the Vercel AI Gateway, total gateway-reported list-price spend $4.10 (charged $0.005; the pre-batch and superseded runs add $1.96 market). The results are in the generated [checker experiment results](./checker-experiment-results.md).
+
+Getting there took three frozen protocol versions, each bump forced by a failure that changed the design, with every superseded run preserved under `fixtures/experiment_v1/superseded_v0_1/` and `superseded_v0_2/`:
+
+- **0.1.0 -> 0.2.0**: the 300-token reasoned output limit truncated three-question responses (`finish_reason: length`; 111/150 execution errors on the `claude-sonnet-5-three` pre-batch run). 0.2.0 raised it to 1000 and the batch was rerun.
+- **0.2.0 -> 0.3.0**: the 100-token verdict-only limit truncated gemini-3.8-flash timing responses with empty content (hidden reasoning tokens precede visible output). 0.3.0 raised it to 1000 and the timing arms were rerun; the change touches a parameter scored arms never use, and 0.3.0 declares 0.2.0 scored runs compatible by hash, which the scorer verifies.
+- **The free-tier blocker**: before the first batch, all four pinned LLMs returned HTTP 403 `RestrictedModelsError` on the experiment key's free-tier credits. Per the issue brief no model was substituted; the maintainer added credits and the batch ran with the original pins.
+
+The pre-batch smoke check, estimate, and the maintainer's signed spending cap ($8.00, revised from $5.00 when the v0.2 estimate grew) are recorded in `fixtures/experiment_v1/spend_cap_signoff.json`.
 
 ## Next steps
 
