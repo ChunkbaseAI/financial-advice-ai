@@ -104,7 +104,7 @@ describe("validateRunRecord", () => {
 
   const mutations: Array<[string, (record: Record<string, any>) => void, string]> = [
     ["a missing format_version", (r) => delete r.format_version, "format_version"],
-    ["an unsupported format_version", (r) => r.format_version = 2, "format_version"],
+    ["an unsupported format_version", (r) => r.format_version = 3, "format_version"],
     ["an empty run_id", (r) => r.run_id = " ", "run_id"],
     ["a negative sample_index", (r) => r.sample_index = -1, "sample_index"],
     ["a fractional sample_index", (r) => r.sample_index = 1.5, "sample_index"],
@@ -153,7 +153,7 @@ describe("validateRunRecord", () => {
 
   test("collects every violation rather than stopping at the first", () => {
     const record = modelSuccessRecord();
-    record.format_version = 2;
+    record.format_version = 3;
     record.usage.input_tokens = -5;
     const violations = validateRunRecord(record);
     expect(violations.some((v) => v.includes("format_version"))).toBe(true);
@@ -171,7 +171,7 @@ describe("validateRunManifest", () => {
   });
 
   const mutations: Array<[string, (manifest: Record<string, any>) => void, string]> = [
-    ["an unsupported format_version", (m) => m.format_version = 2, "format_version"],
+    ["an unsupported format_version", (m) => m.format_version = 3, "format_version"],
     ["a missing run_id", (m) => delete m.run_id, "run_id"],
     ["a date-only created_at", (m) => m.created_at = "2026-09-20", "created_at"],
     ["a non-semver case_set_version", (m) => m.case_set_version = "v1", "case_set_version"],
