@@ -1,0 +1,7 @@
+{
+  "case_set_file": "case_set_v1.json",
+  "case_set_version": "1.0.0",
+  "sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "frozen_at": "2026-09-20",
+  "note": "Frozen before any model run (issue #3). Every test verifies this hash, so editing the case set fails loudly. Re-freeze only for an intended change, and record the reason in the write-up."
+}

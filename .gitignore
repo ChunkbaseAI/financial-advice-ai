@@ -1,0 +1,16 @@
+# Credentials — never commit local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+
+# Python
+.venv/
+__pycache__/
+
+# OS and editor noise
+.DS_Store
+*.log

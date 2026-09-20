@@ -1,0 +1,825 @@
+{
+  "format_version": 1,
+  "case_set_version": "1.0.0",
+  "description": "Synthetic Claim-card case set v1 for the checker experiment (issue #3). Fifty cards across three fictional UK advice households, each pairing a Claim with Evidence Spans from fictional Source Artifacts and a human-checkable expected verdict.",
+  "provenance": {
+    "synthetic": true,
+    "jurisdiction": "GB",
+    "statement": "All households, people, employers, providers and figures are fictional and were written for this repository. Provider names are fictional except generic references to public schemes (the NHS Pension Scheme and the UK State Pension). No real client data, transcripts or firm material."
+  },
+  "usage": "The fields category, expected_verdict and rationale are ground truth for evaluation. A checker must only be shown claim and evidence_spans.",
+  "households": [
+    { "id": "hh-sp", "name": "Sharma-Patel household, Leeds" },
+    { "id": "hh-ok", "name": "Okafor household, Manchester" },
+    { "id": "hh-mw", "name": "Whitfield household, Bristol" }
+  ],
+  "subjects": [
+    { "id": "sub-sp-priya", "household_id": "hh-sp", "kind": "person", "name": "Priya Sharma" },
+    { "id": "sub-sp-dev", "household_id": "hh-sp", "kind": "person", "name": "Dev Patel" },
+    { "id": "sub-sp-aldegate", "household_id": "hh-sp", "kind": "policy", "name": "Aldgate Life personal pension, plan 4471 002 833", "owner_subject_id": "sub-sp-priya" },
+    { "id": "sub-sp-bramwell", "household_id": "hh-sp", "kind": "policy", "name": "Bramwell Bank stocks and shares ISA, account 2201 8834", "owner_subject_id": "sub-sp-priya" },
+    { "id": "sub-sp-calderdale", "household_id": "hh-sp", "kind": "policy", "name": "Calderdale Building Society mortgage, account 8821 4470" },
+    { "id": "sub-sp-pennine", "household_id": "hh-sp", "kind": "policy", "name": "Pennine Teachers' Pension Scheme (Dev Patel's service)", "owner_subject_id": "sub-sp-dev" },
+    { "id": "sub-ok-chidi", "household_id": "hh-ok", "kind": "person", "name": "Chidi Okafor" },
+    { "id": "sub-ok-ngozi", "household_id": "hh-ok", "kind": "person", "name": "Ngozi Okafor" },
+    { "id": "sub-ok-meridian", "household_id": "hh-ok", "kind": "policy", "name": "Meridian Group Pension Scheme defined contribution plan, member MGP 77240", "owner_subject_id": "sub-ok-chidi" },
+    { "id": "sub-ok-nhs", "household_id": "hh-ok", "kind": "policy", "name": "NHS Pension Scheme, 1995 section (Ngozi Okafor's membership)", "owner_subject_id": "sub-ok-ngozi" },
+    { "id": "sub-mw-margaret", "household_id": "hh-mw", "kind": "person", "name": "Margaret Whitfield" },
+    { "id": "sub-mw-dunston", "household_id": "hh-mw", "kind": "policy", "name": "Dunston & Vale Investments SIPP, account 7712 0065", "owner_subject_id": "sub-mw-margaret" },
+    { "id": "sub-mw-eastgate", "household_id": "hh-mw", "kind": "policy", "name": "Eastgate Bank savings account, 0011 4482", "owner_subject_id": "sub-mw-margaret" },
+    { "id": "sub-mw-sefton", "household_id": "hh-mw", "kind": "policy", "name": "Sefton Teachers' Pension Scheme survivor benefit (Alan Whitfield's service)", "owner_subject_id": "sub-mw-margaret" }
+  ],
+  "fields": [
+    { "code": "salary.annual-gross", "description": "The subject's gross annual salary from employment, as the basis states." },
+    { "code": "pension.plan-value", "description": "Current market value of the subject's defined-contribution pension plan, including a drawdown fund." },
+    { "code": "isa.plan-value", "description": "Current value of the subject's stocks and shares ISA." },
+    { "code": "mortgage.outstanding-balance", "description": "Outstanding capital balance on the subject's mortgage." },
+    { "code": "mortgage.interest-rate", "description": "Interest rate currently applied to the subject's mortgage." },
+    { "code": "mortgage.remaining-term", "description": "Years remaining on the subject's mortgage term." },
+    { "code": "pension.member-contribution", "description": "Amount the subject personally contributed to their pension plan over a year." },
+    { "code": "pension.contribution-rate", "description": "Contribution rate the subject applies to their pensionable earnings, as the basis states." },
+    { "code": "pension.db-annual-benefit", "description": "Annual pension from a defined-benefit scheme, including survivor benefits where the basis states so." },
+    { "code": "pension.db-lump-sum", "description": "Lump sum payable from the subject's defined-benefit scheme on retirement." },
+    { "code": "state-pension.weekly-amount", "description": "Weekly State Pension amount, in payment or forecast, as the basis states." },
+    { "code": "annuity.annual-income", "description": "Annual income from an annuity quoted or in payment, as the basis states." },
+    { "code": "pension.total-contribution", "description": "Total annual contributions into the subject's defined-contribution plan, member plus employer unless the basis states otherwise." },
+    { "code": "pension.tax-free-cash", "description": "Tax-free cash lump sum available from the subject's defined-contribution plan, as the basis states." },
+    { "code": "drawdown.annual-income", "description": "Annual income drawn, or planned to be drawn, from the subject's drawdown plan, as the basis states." },
+    { "code": "drawdown.monthly-withdrawal", "description": "Regular monthly withdrawal from the subject's drawdown plan, as the basis states." },
+    { "code": "savings.balance", "description": "Current balance of the subject's savings account." },
+    { "code": "savings.interest-rate", "description": "Interest rate applied to the subject's savings account." },
+    { "code": "savings.interest-paid", "description": "Interest paid into the subject's savings account over a year." },
+    { "code": "care.weekly-fee", "description": "Weekly fee for the subject's residential care, actual or illustrative, as the basis states." }
+  ],
+  "units": [
+    { "code": "GBP", "description": "Pounds sterling, whole or precise amount." },
+    { "code": "GBP/year", "description": "Pounds sterling per year." },
+    { "code": "GBP/month", "description": "Pounds sterling per month." },
+    { "code": "GBP/week", "description": "Pounds sterling per week." },
+    { "code": "percent", "description": "Percentage." },
+    { "code": "years", "description": "Duration in years." }
+  ],
+  "source_artifacts": [
+    {
+      "id": "art-sp-transcript",
+      "household_id": "hh-sp",
+      "revision": "r1",
+      "kind": "meeting-transcript",
+      "title": "Annual review meeting, Sharma-Patel, 17 April 2026",
+      "date": "2026-04-17",
+      "lines": [
+        "Adviser (Sarah Hall): Good afternoon, both. This is our annual review, recorded for your file. Let's start with work and income.",
+        "Priya Sharma: I'm still at the hospital pharmacy. My basic salary went up to £68,500 with the April pay round, and I do the odd on-call weekend on top.",
+        "Dev Patel: Mine's £47,900 now that the leadership allowance is included.",
+        "Adviser (Sarah Hall): Thank you. Priya, your Aldgate plan was valued at £207,432 as at 5 April.",
+        "Priya Sharma: That's better than I expected. It was about £185,000 when we last did a full review, two years ago.",
+        "Adviser (Sarah Hall): And you're contributing 8% of basic salary, with the trust adding 5%.",
+        "Dev Patel: My Pennine statement came last week. I still find the teachers' scheme statements hard to read.",
+        "Adviser (Sarah Hall): The headline figures are the estimated annual pension of £19,150 at 65, and the lump sum of £57,450.",
+        "Priya Sharma: What happens if I add more to Aldgate? I could probably find £500 a month.",
+        "Adviser (Sarah Hall): At mid growth assumptions, adding £500 a month from now could take the plan to around £350,000 by your 60th birthday.",
+        "Adviser (Sarah Hall): It's a projection, not a promise — the actual figure will move with markets.",
+        "Priya Sharma: Understood. And if I stopped at 55 instead?",
+        "Adviser (Sarah Hall): If you retired at 55, the fund might support around £9,750 a year of drawdown income to age 75. Again, illustrative only.",
+        "Dev Patel: The Bramwell ISA is Priya's — I've never had one. What's in it now?",
+        "Priya Sharma: Around £42,000, I think. I really must check the statement.",
+        "Adviser (Sarah Hall): The mortgage next. Any changes?",
+        "Dev Patel: The Calderdale mortgage is down to about £186,000 on the last statement I looked at.",
+        "Adviser (Sarah Hall): We'll confirm against the annual statement — rounded recollections are how drafts drift.",
+        "Priya Sharma: Anything else before we close?",
+        "Adviser (Sarah Hall): That covers the annual review. We'll send the draft fact-find for your corrections."
+      ]
+    },
+    {
+      "id": "art-sp-aldegate",
+      "household_id": "hh-sp",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Aldgate Life personal pension statement, plan 4471 002 833, as at 5 April 2026",
+      "date": "2026-04-08",
+      "lines": [
+        "Aldgate Life Assurance plc — Personal Pension Statement",
+        "Plan holder: Mrs Priya Sharma    Plan number: 4471 002 833",
+        "Statement date: 8 April 2026    Plan value as at: 5 April 2026",
+        "Current plan value: £207,432",
+        "Value brought forward at 6 April 2025: £191,200",
+        "Contributions in the year to 5 April 2026: £5,480 (member), £3,425 (employer)",
+        "Investment growth in the year: £8,039",
+        "Projected fund at age 60 if current contributions continue: £289,600 (mid growth basis)",
+        "Charges deducted in the year: £712",
+        "This statement is issued for information and is not a benefit promise."
+      ]
+    },
+    {
+      "id": "art-sp-bramwell",
+      "household_id": "hh-sp",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Bramwell Bank stocks and shares ISA statement, account 2201 8834, as at 31 March 2026",
+      "date": "2026-04-02",
+      "lines": [
+        "Bramwell Bank — Stocks and Shares ISA Statement",
+        "Account holder: Mrs Priya Sharma    Account number: 2201 8834",
+        "Statement date: 2 April 2026    Valued as at: 31 March 2026",
+        "Account value: £39,850",
+        "Holdings:",
+        "Ridgeway Global Equity fund: £27,300",
+        "Ridgeway Sterling Bond fund: £12,550",
+        "Subscriptions in the 2025/26 tax year: £16,000",
+        "Interest and dividends retained within the ISA: £1,105",
+        "ISA manager: Bramwell Bank, authorised and regulated in the UK."
+      ]
+    },
+    {
+      "id": "art-sp-calderdale",
+      "household_id": "hh-sp",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Calderdale Building Society annual mortgage statement, account 8821 4470, year to 31 March 2026",
+      "date": "2026-04-10",
+      "lines": [
+        "Calderdale Building Society — Annual Mortgage Statement",
+        "Borrowers: Mr Dev Patel and Mrs Priya Sharma    Account: 8821 4470",
+        "Statement period: 1 April 2025 to 31 March 2026",
+        "Outstanding capital balance at 31 March 2026: £186,400",
+        "Interest rate: 2.84% fixed until 30 November 2027",
+        "Remaining term: 18 years",
+        "Monthly payment (capital and interest): £932.16",
+        "Capital repaid in the year: £6,914",
+        "An early repayment charge applies until the fixed rate ends.",
+        "This statement confirms the position at the statement date."
+      ]
+    },
+    {
+      "id": "art-ok-transcript",
+      "household_id": "hh-ok",
+      "revision": "r1",
+      "kind": "meeting-transcript",
+      "title": "Retirement planning meeting, Okafor, 24 April 2026",
+      "date": "2026-04-24",
+      "lines": [
+        "Adviser (Sarah Hall): Good morning. Today we're mapping the run-up to retirement, recorded for your file. Salaries first?",
+        "Chidi Okafor: Still £78,600, though the car allowance sits on top of that.",
+        "Ngozi Okafor: I'm on £54,300 now the ward manager uplift has gone through.",
+        "Adviser (Sarah Hall): Thank you. Chidi, your Meridian plan was valued at £366,400 as at 31 March.",
+        "Chidi Okafor: I'd have said it was sitting around £380,000, but I'll take the statement's word.",
+        "Adviser (Sarah Hall): It was about £340,000 at the spring 2024 review, so it's been a strong two years.",
+        "Chidi Okafor: The Meridian pot's come back well since the spring wobble, whatever the exact figure.",
+        "Ngozi Okafor: My NHS statement shows the annual pension at sixty is £21,850, with a lump sum of £65,550.",
+        "Adviser (Sarah Hall): And your State Pension forecasts. Chidi, yours is £214.85 a week from age 67.",
+        "Ngozi Okafor: What about the annuity option for my Meridian pot — sorry, Chidi's Meridian pot?",
+        "Adviser (Sarah Hall): The quote we have for the Meridian fund is £11,850 a year, level payments, single life, with a five-year guarantee.",
+        "Chidi Okafor: And if I took the tax-free cash first?",
+        "Adviser (Sarah Hall): If you took 25% tax-free cash from Meridian now, that would be around £91,600, and the rest would buy less income.",
+        "Adviser (Sarah Hall): These figures are illustrative — quotes move with the market.",
+        "Ngozi Okafor: My state pension forecast is the one I never remember.",
+        "Adviser (Sarah Hall): We'll attach both forecasts to the file rather than rely on memory today.",
+        "Chidi Okafor: Contributions — I put in £7,150 and the firm puts in £5,600, so £12,750 altogether in the year.",
+        "Adviser (Sarah Hall): That matches the statement. Anything else before we summarise?",
+        "Ngozi Okafor: Nothing from me.",
+        "Adviser (Sarah Hall): We'll send the draft fact-find for corrections."
+      ]
+    },
+    {
+      "id": "art-ok-meridian",
+      "household_id": "hh-ok",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Meridian Group Pension Scheme defined contribution statement, member MGP 77240, as at 31 March 2026",
+      "date": "2026-04-11",
+      "lines": [
+        "Meridian Group Pension Scheme — Defined Contribution Statement",
+        "Member: Dr Chidi Okafor    Member number: MGP 77240",
+        "Statement date: 11 April 2026    Fund valued as at: 31 March 2026",
+        "Current fund value: £366,400",
+        "Value brought forward at 1 April 2025: £341,300",
+        "Total contributions in the year to 31 March 2026: £12,750 (member £7,150, employer £5,600)",
+        "Investment return in the year: £22,150",
+        "Charges deducted in the year: £9,800",
+        "Projected fund at 65 on mid assumptions: £427,900",
+        "This statement is issued for information and is not a benefit promise."
+      ]
+    },
+    {
+      "id": "art-ok-nhs",
+      "household_id": "hh-ok",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "NHS Pension Scheme annual benefit statement, Ngozi Okafor, 1995 section",
+      "date": "2026-04-14",
+      "lines": [
+        "NHS Pension Scheme — Annual Benefit Statement",
+        "Member: Mrs Ngozi Okafor    Membership reference: NHS 8264/551",
+        "Scheme: 1995 section    Normal pension age: 60",
+        "Annual pension at normal pension age: £21,850",
+        "Lump sum on retirement at normal pension age: £65,550",
+        "Pensionable pay at 31 March 2026: £53,200",
+        "Total membership at 31 March 2026: 29 years and 97 days",
+        "Statement date: 14 April 2026",
+        "This statement is a guide to benefits and is not a guarantee of the amount payable."
+      ]
+    },
+    {
+      "id": "art-mw-transcript",
+      "household_id": "hh-mw",
+      "revision": "r1",
+      "kind": "meeting-transcript",
+      "title": "Later-life planning review, Whitfield, 12 May 2026",
+      "date": "2026-05-12",
+      "lines": [
+        "Adviser (Sarah Hall): Good afternoon, Margaret. This is your later-life planning review, recorded for your file. How are things?",
+        "Margaret Whitfield: Steady, thank you. The Dunston pot's about £225,000 still, I believe.",
+        "Adviser (Sarah Hall): We'll check that against the statement in a moment.",
+        "Margaret Whitfield: It was £260,000 when I started taking the income in 2021, before the markets wobbled.",
+        "Adviser (Sarah Hall): The Dunston fund has recovered nicely since the autumn dip.",
+        "Adviser (Sarah Hall): Your own pension from teaching is £14,050 a year, and the survivor's pension from Alan's Sefton scheme is £4,620 a year.",
+        "Margaret Whitfield: Alan's scheme pays me about £4,400 a year I think — it's never the figure I remember.",
+        "Adviser (Sarah Hall): Your State Pension is £230.25 a week now after the April uprating.",
+        "Margaret Whitfield: And I take £950 a month from the Dunston pot, into the bank on the fifteenth.",
+        "Adviser (Sarah Hall): We should confirm how much of that is taxable at your marginal rate.",
+        "Adviser (Sarah Hall): On care fees, it's worth planning ahead. If care fees of £1,200 a week were needed, the combined pot would last about nine and a half years.",
+        "Adviser (Sarah Hall): That's an illustration for planning, not a forecast of what care will cost.",
+        "Margaret Whitfield: When Alan died we had about £92,000 in savings; it's less now, what with the new boiler and the trip to see my sister in Toronto.",
+        "Adviser (Sarah Hall): The Eastgate statement will show where the savings stand now.",
+        "Adviser (Sarah Hall): Anything else you'd like to look at?",
+        "Margaret Whitfield: Only that I don't want to be a burden on Deborah — she's got enough on her plate.",
+        "Adviser (Sarah Hall): Understood, we'll keep the withdrawal plan under review with that in mind.",
+        "Margaret Whitfield: That's reassuring.",
+        "Adviser (Sarah Hall): We'll send the draft fact-find for your corrections.",
+        "[Meeting ends]"
+      ]
+    },
+    {
+      "id": "art-mw-dunston",
+      "household_id": "hh-mw",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Dunston & Vale Investments SIPP statement, account 7712 0065, as at 30 April 2026",
+      "date": "2026-05-05",
+      "lines": [
+        "Dunston & Vale Investments — SIPP Annual Statement",
+        "Account holder: Mrs Margaret Whitfield    Account number: 7712 0065",
+        "Statement date: 5 May 2026    Fund valued as at: 30 April 2026",
+        "Drawdown fund value: £211,340",
+        "Fund value at 30 April 2025: £208,900",
+        "Regular withdrawal: £950 per month (gross)",
+        "Withdrawals in the 2025/26 tax year: £11,400 (gross)",
+        "Investment return in the year: £15,810",
+        "Charges deducted in the year: £1,970",
+        "This statement is issued for information and is not a benefit promise."
+      ]
+    },
+    {
+      "id": "art-mw-eastgate",
+      "household_id": "hh-mw",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Eastgate Bank savings account statement, account 0011 4482, as at 30 April 2026",
+      "date": "2026-05-05",
+      "lines": [
+        "Eastgate Bank — Savings Account Statement",
+        "Account holder: Mrs Margaret Whitfield    Account number: 0011 4482",
+        "Statement date: 5 May 2026    Balance as at: 30 April 2026",
+        "Account balance: £84,700",
+        "Interest rate: 4.25% AER variable",
+        "Interest paid in the year to 5 April 2026: £3,412.68",
+        "Balance at 5 April 2025: £81,400",
+        "Withdrawals in the statement period: £112.68 (one card payment)",
+        "Eastgate Bank, member of the FSCS deposit protection scheme."
+      ]
+    },
+    {
+      "id": "art-mw-sefton",
+      "household_id": "hh-mw",
+      "revision": "r1",
+      "kind": "provider-document",
+      "title": "Sefton Teachers' Pension Scheme survivor benefit statement, Margaret Whitfield",
+      "date": "2026-03-28",
+      "lines": [
+        "Sefton Teachers' Pension Scheme — Survivor Benefit Statement",
+        "Beneficiary: Mrs Margaret Whitfield    Reference: STP/SUR/4471",
+        "Member: Mr Alan Whitfield (died 14 March 2023)",
+        "Survivor's annual pension: £4,620",
+        "Payable from: 14 March 2023, reviewed each April",
+        "Includes standard survivor increases",
+        "Statement date: 28 March 2026",
+        "This statement confirms the survivor benefit payable and is not a guarantee of future increases."
+      ]
+    }
+  ],
+  "category_distribution": {
+    "correct": 25,
+    "wrong-subject": 5,
+    "stale-value": 4,
+    "hypothetical": 4,
+    "unsupported": 4,
+    "wrong-basis": 4,
+    "conflict": 4
+  },
+  "cards": [
+    {
+      "id": "card-sp-01",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The transcript states Priya's basic salary rose to £68,500 in the April pay round; subject, value and basis match, and on-call work is excluded from the claimed basis.",
+      "claim": { "subject_id": "sub-sp-priya", "field": "salary.annual-gross", "value": 68500, "unit": "GBP/year", "period_or_basis": "current basic gross annual salary, excluding on-call banding", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 2, "line_end": 2, "quote": "Priya Sharma: I'm still at the hospital pharmacy. My basic salary went up to £68,500 with the April pay round, and I do the odd on-call weekend on top." }
+      ]
+    },
+    {
+      "id": "card-sp-02",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "Dev states his salary is £47,900 now the leadership allowance is included, which matches the claim's subject, value and basis exactly.",
+      "claim": { "subject_id": "sub-sp-dev", "field": "salary.annual-gross", "value": 47900, "unit": "GBP/year", "period_or_basis": "current gross annual salary including the leadership allowance", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 3, "line_end": 3, "quote": "Dev Patel: Mine's £47,900 now that the leadership allowance is included." }
+      ]
+    },
+    {
+      "id": "card-sp-03",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The Aldgate statement gives the plan value as at 5 April 2026 as £207,432; subject, value, unit and basis all match the claim.",
+      "claim": { "subject_id": "sub-sp-aldegate", "field": "pension.plan-value", "value": 207432, "unit": "GBP", "period_or_basis": "plan value as at 5 April 2026", "as_of": "2026-04-05" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-aldegate", "line_start": 4, "line_end": 4, "quote": "Current plan value: £207,432" }
+      ]
+    },
+    {
+      "id": "card-sp-04",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The ISA statement values Priya's account at £39,850 as at 31 March 2026, matching the claim.",
+      "claim": { "subject_id": "sub-sp-bramwell", "field": "isa.plan-value", "value": 39850, "unit": "GBP", "period_or_basis": "account value as at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-bramwell", "line_start": 4, "line_end": 4, "quote": "Account value: £39,850" }
+      ]
+    },
+    {
+      "id": "card-sp-05",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The mortgage statement confirms the outstanding capital balance at 31 March 2026 as £186,400, matching the claim.",
+      "claim": { "subject_id": "sub-sp-calderdale", "field": "mortgage.outstanding-balance", "value": 186400, "unit": "GBP", "period_or_basis": "outstanding capital balance at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-calderdale", "line_start": 4, "line_end": 4, "quote": "Outstanding capital balance at 31 March 2026: £186,400" }
+      ]
+    },
+    {
+      "id": "card-sp-06",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement confirms the mortgage is on a 2.84% fixed rate, matching the claimed rate and basis.",
+      "claim": { "subject_id": "sub-sp-calderdale", "field": "mortgage.interest-rate", "value": 2.84, "unit": "percent", "period_or_basis": "fixed interest rate currently applied to the account", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-calderdale", "line_start": 5, "line_end": 5, "quote": "Interest rate: 2.84% fixed until 30 November 2027" }
+      ]
+    },
+    {
+      "id": "card-sp-07",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement gives the remaining mortgage term as 18 years, matching the claim.",
+      "claim": { "subject_id": "sub-sp-calderdale", "field": "mortgage.remaining-term", "value": 18, "unit": "years", "period_or_basis": "years remaining on the term at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-calderdale", "line_start": 6, "line_end": 6, "quote": "Remaining term: 18 years" }
+      ]
+    },
+    {
+      "id": "card-sp-08",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The transcript quotes the Pennine statement's headline figures: an estimated annual pension of £19,150 at 65, matching the claim.",
+      "claim": { "subject_id": "sub-sp-pennine", "field": "pension.db-annual-benefit", "value": 19150, "unit": "GBP/year", "period_or_basis": "estimated annual pension at normal pension age 65", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 8, "line_end": 8, "quote": "Adviser (Sarah Hall): The headline figures are the estimated annual pension of £19,150 at 65, and the lump sum of £57,450." }
+      ]
+    },
+    {
+      "id": "card-sp-09",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement records member contributions of £5,480 in the year to 5 April 2026, matching the claim's amount and period.",
+      "claim": { "subject_id": "sub-sp-aldegate", "field": "pension.member-contribution", "value": 5480, "unit": "GBP/year", "period_or_basis": "member contributions in the year to 5 April 2026", "as_of": "2026-04-05" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-aldegate", "line_start": 6, "line_end": 6, "quote": "Contributions in the year to 5 April 2026: £5,480 (member), £3,425 (employer)" }
+      ]
+    },
+    {
+      "id": "card-sp-10",
+      "category": "wrong-subject",
+      "expected_verdict": "unsupported",
+      "rationale": "The £68,500 figure is Priya's basic salary, stated by Priya about her own pay; the claim attributes it to Dev.",
+      "claim": { "subject_id": "sub-sp-dev", "field": "salary.annual-gross", "value": 68500, "unit": "GBP/year", "period_or_basis": "current basic gross annual salary", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 2, "line_end": 2, "quote": "Priya Sharma: I'm still at the hospital pharmacy. My basic salary went up to £68,500 with the April pay round, and I do the odd on-call weekend on top." }
+      ]
+    },
+    {
+      "id": "card-sp-11",
+      "category": "wrong-subject",
+      "expected_verdict": "unsupported",
+      "rationale": "The quoted ISA is held by Mrs Priya Sharma and valued at £39,850; the claim attributes it to Dev, who holds no ISA.",
+      "claim": { "subject_id": "sub-sp-dev", "field": "isa.plan-value", "value": 39850, "unit": "GBP", "period_or_basis": "account value as at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-bramwell", "line_start": 2, "line_end": 4, "quote": "Account holder: Mrs Priya Sharma    Account number: 2201 8834\nStatement date: 2 April 2026    Valued as at: 31 March 2026\nAccount value: £39,850" }
+      ]
+    },
+    {
+      "id": "card-sp-12",
+      "category": "stale-value",
+      "expected_verdict": "unsupported",
+      "rationale": "The £185,000 figure is explicitly the value at the review two years ago; the claim presents it as the current plan value.",
+      "claim": { "subject_id": "sub-sp-aldegate", "field": "pension.plan-value", "value": 185000, "unit": "GBP", "period_or_basis": "current plan value at the date of the meeting", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 5, "line_end": 5, "quote": "Priya Sharma: That's better than I expected. It was about £185,000 when we last did a full review, two years ago." }
+      ]
+    },
+    {
+      "id": "card-sp-13",
+      "category": "hypothetical",
+      "expected_verdict": "unsupported",
+      "rationale": "The £350,000 figure is a conditional projection of what adding £500 a month could achieve by age 60; the claim presents it as the current plan value.",
+      "claim": { "subject_id": "sub-sp-aldegate", "field": "pension.plan-value", "value": 350000, "unit": "GBP", "period_or_basis": "current plan value at the date of the meeting", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 10, "line_end": 11, "quote": "Adviser (Sarah Hall): At mid growth assumptions, adding £500 a month from now could take the plan to around £350,000 by your 60th birthday.\nAdviser (Sarah Hall): It's a projection, not a promise — the actual figure will move with markets." }
+      ]
+    },
+    {
+      "id": "card-sp-14",
+      "category": "hypothetical",
+      "expected_verdict": "unsupported",
+      "rationale": "The £9,750 a year figure is what the fund might support if Priya retired at 55, an illustration; the claim presents it as income currently planned.",
+      "claim": { "subject_id": "sub-sp-priya", "field": "drawdown.annual-income", "value": 9750, "unit": "GBP/year", "period_or_basis": "regular annual income currently planned to be drawn from the plan", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 13, "line_end": 13, "quote": "Adviser (Sarah Hall): If you retired at 55, the fund might support around £9,750 a year of drawdown income to age 75. Again, illustrative only." }
+      ]
+    },
+    {
+      "id": "card-sp-15",
+      "category": "unsupported",
+      "expected_verdict": "unsupported",
+      "rationale": "The cited recollection says about £186,000; the claimed £186,400 appears nowhere in the evidence span.",
+      "claim": { "subject_id": "sub-sp-calderdale", "field": "mortgage.outstanding-balance", "value": 186400, "unit": "GBP", "period_or_basis": "outstanding capital balance at the date of the meeting", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 17, "line_end": 17, "quote": "Dev Patel: The Calderdale mortgage is down to about £186,000 on the last statement I looked at." }
+      ]
+    },
+    {
+      "id": "card-sp-16",
+      "category": "wrong-basis",
+      "expected_verdict": "unsupported",
+      "rationale": "The 8% rate is confirmed, but the evidence applies it to basic salary only; the claim's wider basis, including on-call banding, is not supported.",
+      "claim": { "subject_id": "sub-sp-priya", "field": "pension.contribution-rate", "value": 8, "unit": "percent", "period_or_basis": "member contribution rate applied to total gross salary including on-call banding", "as_of": "2026-04-17" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 6, "line_end": 6, "quote": "Adviser (Sarah Hall): And you're contributing 8% of basic salary, with the trust adding 5%." }
+      ]
+    },
+    {
+      "id": "card-sp-17",
+      "category": "conflict",
+      "expected_verdict": "unsupported",
+      "rationale": "The transcript recollection (£42,000) and the ISA statement (£39,850) disagree, and the claimed £41,200 matches neither; the value cannot be accepted without resolution.",
+      "claim": { "subject_id": "sub-sp-bramwell", "field": "isa.plan-value", "value": 41200, "unit": "GBP", "period_or_basis": "account value as at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-sp-transcript", "line_start": 15, "line_end": 15, "quote": "Priya Sharma: Around £42,000, I think. I really must check the statement." },
+        { "artifact_id": "art-sp-bramwell", "line_start": 4, "line_end": 4, "quote": "Account value: £39,850" }
+      ]
+    },
+    {
+      "id": "card-ok-01",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "Chidi states his salary is £78,600 with the car allowance on top, so the basic-salary claim with its excluding basis matches the evidence.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "salary.annual-gross", "value": 78600, "unit": "GBP/year", "period_or_basis": "current basic gross annual salary, excluding the car allowance", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 2, "line_end": 2, "quote": "Chidi Okafor: Still £78,600, though the car allowance sits on top of that." }
+      ]
+    },
+    {
+      "id": "card-ok-02",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "Ngozi states she is on £54,300 after the ward manager uplift, matching the claim's subject, value and basis.",
+      "claim": { "subject_id": "sub-ok-ngozi", "field": "salary.annual-gross", "value": 54300, "unit": "GBP/year", "period_or_basis": "current gross annual salary including the ward manager uplift", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 3, "line_end": 3, "quote": "Ngozi Okafor: I'm on £54,300 now the ward manager uplift has gone through." }
+      ]
+    },
+    {
+      "id": "card-ok-03",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The Meridian statement gives the fund value as at 31 March 2026 as £366,400, matching the claim.",
+      "claim": { "subject_id": "sub-ok-meridian", "field": "pension.plan-value", "value": 366400, "unit": "GBP", "period_or_basis": "fund value as at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-meridian", "line_start": 4, "line_end": 4, "quote": "Current fund value: £366,400" }
+      ]
+    },
+    {
+      "id": "card-ok-04",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The adviser's forecast for Chidi is a State Pension of £214.85 a week from age 67, matching the claim.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "state-pension.weekly-amount", "value": 214.85, "unit": "GBP/week", "period_or_basis": "State Pension forecast payable from state pension age 67", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 9, "line_end": 9, "quote": "Adviser (Sarah Hall): And your State Pension forecasts. Chidi, yours is £214.85 a week from age 67." }
+      ]
+    },
+    {
+      "id": "card-ok-05",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The NHS statement gives an annual pension at normal pension age 60 of £21,850 for the 1995 section, matching the claim.",
+      "claim": { "subject_id": "sub-ok-nhs", "field": "pension.db-annual-benefit", "value": 21850, "unit": "GBP/year", "period_or_basis": "annual pension payable at normal pension age 60 from the 1995 section", "as_of": "2026-04-14" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-nhs", "line_start": 4, "line_end": 4, "quote": "Annual pension at normal pension age: £21,850" }
+      ]
+    },
+    {
+      "id": "card-ok-06",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The NHS statement gives the retirement lump sum at normal pension age as £65,550, matching the claim.",
+      "claim": { "subject_id": "sub-ok-nhs", "field": "pension.db-lump-sum", "value": 65550, "unit": "GBP", "period_or_basis": "lump sum payable on retirement at normal pension age 60", "as_of": "2026-04-14" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-nhs", "line_start": 5, "line_end": 5, "quote": "Lump sum on retirement at normal pension age: £65,550" }
+      ]
+    },
+    {
+      "id": "card-ok-07",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The quoted annuity of £11,850 a year is level, single life, with a five-year guarantee, matching the claim's amount and basis.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "annuity.annual-income", "value": 11850, "unit": "GBP/year", "period_or_basis": "quoted annuity income, level payments, single life, five-year guarantee", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 11, "line_end": 11, "quote": "Adviser (Sarah Hall): The quote we have for the Meridian fund is £11,850 a year, level payments, single life, with a five-year guarantee." }
+      ]
+    },
+    {
+      "id": "card-ok-08",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement records total contributions of £12,750 in the year to 31 March 2026, and the claim's basis includes member plus employer, matching.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "pension.total-contribution", "value": 12750, "unit": "GBP/year", "period_or_basis": "total (member plus employer) contributions in the year to 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-meridian", "line_start": 6, "line_end": 6, "quote": "Total contributions in the year to 31 March 2026: £12,750 (member £7,150, employer £5,600)" }
+      ]
+    },
+    {
+      "id": "card-ok-09",
+      "category": "wrong-subject",
+      "expected_verdict": "unsupported",
+      "rationale": "The £214.85 weekly forecast is addressed to Chidi; the claim attributes it to Ngozi, whose own forecast is not in evidence.",
+      "claim": { "subject_id": "sub-ok-ngozi", "field": "state-pension.weekly-amount", "value": 214.85, "unit": "GBP/week", "period_or_basis": "State Pension forecast payable from state pension age 67", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 9, "line_end": 9, "quote": "Adviser (Sarah Hall): And your State Pension forecasts. Chidi, yours is £214.85 a week from age 67." }
+      ]
+    },
+    {
+      "id": "card-ok-10",
+      "category": "wrong-subject",
+      "expected_verdict": "unsupported",
+      "rationale": "The Meridian statement is for Dr Chidi Okafor; the claim attributes his fund value to Ngozi.",
+      "claim": { "subject_id": "sub-ok-ngozi", "field": "pension.plan-value", "value": 366400, "unit": "GBP", "period_or_basis": "fund value as at 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-meridian", "line_start": 2, "line_end": 4, "quote": "Member: Dr Chidi Okafor    Member number: MGP 77240\nStatement date: 11 April 2026    Fund valued as at: 31 March 2026\nCurrent fund value: £366,400" }
+      ]
+    },
+    {
+      "id": "card-ok-11",
+      "category": "stale-value",
+      "expected_verdict": "unsupported",
+      "rationale": "The £340,000 figure is the fund value at the spring 2024 review; the claim presents it as the current fund value.",
+      "claim": { "subject_id": "sub-ok-meridian", "field": "pension.plan-value", "value": 340000, "unit": "GBP", "period_or_basis": "current fund value at the date of the meeting", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 6, "line_end": 6, "quote": "Adviser (Sarah Hall): It was about £340,000 at the spring 2024 review, so it's been a strong two years." }
+      ]
+    },
+    {
+      "id": "card-ok-12",
+      "category": "hypothetical",
+      "expected_verdict": "unsupported",
+      "rationale": "The £91,600 figure is what taking 25% tax-free cash now would raise, an illustrative conditional; the claim presents it as cash currently available.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "pension.tax-free-cash", "value": 91600, "unit": "GBP", "period_or_basis": "tax-free cash currently available from the plan", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 13, "line_end": 14, "quote": "Adviser (Sarah Hall): If you took 25% tax-free cash from Meridian now, that would be around £91,600, and the rest would buy less income.\nAdviser (Sarah Hall): These figures are illustrative — quotes move with the market." }
+      ]
+    },
+    {
+      "id": "card-ok-13",
+      "category": "unsupported",
+      "expected_verdict": "unsupported",
+      "rationale": "The cited line discusses the fund's recovery without stating any value; the claimed £410,000 appears nowhere in the evidence span.",
+      "claim": { "subject_id": "sub-ok-meridian", "field": "pension.plan-value", "value": 410000, "unit": "GBP", "period_or_basis": "current fund value at the date of the meeting", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 7, "line_end": 7, "quote": "Chidi Okafor: The Meridian pot's come back well since the spring wobble, whatever the exact figure." }
+      ]
+    },
+    {
+      "id": "card-ok-14",
+      "category": "unsupported",
+      "expected_verdict": "unsupported",
+      "rationale": "The statement puts the retirement lump sum at £65,550; the claimed £70,000 appears nowhere in the evidence span.",
+      "claim": { "subject_id": "sub-ok-nhs", "field": "pension.db-lump-sum", "value": 70000, "unit": "GBP", "period_or_basis": "lump sum payable on retirement at normal pension age 60", "as_of": "2026-04-14" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-nhs", "line_start": 5, "line_end": 5, "quote": "Lump sum on retirement at normal pension age: £65,550" }
+      ]
+    },
+    {
+      "id": "card-ok-15",
+      "category": "wrong-basis",
+      "expected_verdict": "unsupported",
+      "rationale": "The £12,750 total includes the employer's £5,600; Chidi's own contributions are £7,150, so the claimed member-only basis is wrong.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "pension.total-contribution", "value": 12750, "unit": "GBP/year", "period_or_basis": "member's own contributions in the year to 31 March 2026", "as_of": "2026-03-31" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-meridian", "line_start": 6, "line_end": 6, "quote": "Total contributions in the year to 31 March 2026: £12,750 (member £7,150, employer £5,600)" }
+      ]
+    },
+    {
+      "id": "card-ok-16",
+      "category": "wrong-basis",
+      "expected_verdict": "unsupported",
+      "rationale": "The quoted £11,850 annuity carries a five-year guarantee; the claim states a ten-year guarantee, which the evidence does not support.",
+      "claim": { "subject_id": "sub-ok-chidi", "field": "annuity.annual-income", "value": 11850, "unit": "GBP/year", "period_or_basis": "quoted annuity income, level payments, single life, ten-year guarantee", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 11, "line_end": 11, "quote": "Adviser (Sarah Hall): The quote we have for the Meridian fund is £11,850 a year, level payments, single life, with a five-year guarantee." }
+      ]
+    },
+    {
+      "id": "card-ok-17",
+      "category": "conflict",
+      "expected_verdict": "unsupported",
+      "rationale": "Chidi's recollection (£380,000) and the Meridian statement (£366,400) disagree, and the claimed £372,000 matches neither; the value cannot be accepted without resolution.",
+      "claim": { "subject_id": "sub-ok-meridian", "field": "pension.plan-value", "value": 372000, "unit": "GBP", "period_or_basis": "current fund value at the date of the meeting", "as_of": "2026-04-24" },
+      "evidence_spans": [
+        { "artifact_id": "art-ok-transcript", "line_start": 5, "line_end": 5, "quote": "Chidi Okafor: I'd have said it was sitting around £380,000, but I'll take the statement's word." },
+        { "artifact_id": "art-ok-meridian", "line_start": 4, "line_end": 4, "quote": "Current fund value: £366,400" }
+      ]
+    },
+    {
+      "id": "card-mw-01",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The Dunston statement gives the drawdown fund value as at 30 April 2026 as £211,340, matching the claim.",
+      "claim": { "subject_id": "sub-mw-dunston", "field": "pension.plan-value", "value": 211340, "unit": "GBP", "period_or_basis": "drawdown fund value as at 30 April 2026", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-dunston", "line_start": 4, "line_end": 4, "quote": "Drawdown fund value: £211,340" }
+      ]
+    },
+    {
+      "id": "card-mw-02",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement confirms a regular withdrawal of £950 per month, gross, matching the claim's amount and basis.",
+      "claim": { "subject_id": "sub-mw-dunston", "field": "drawdown.monthly-withdrawal", "value": 950, "unit": "GBP/month", "period_or_basis": "regular monthly withdrawal from the drawdown fund, gross", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-dunston", "line_start": 6, "line_end": 6, "quote": "Regular withdrawal: £950 per month (gross)" }
+      ]
+    },
+    {
+      "id": "card-mw-03",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The Eastgate statement shows an account balance of £84,700 as at 30 April 2026, matching the claim.",
+      "claim": { "subject_id": "sub-mw-eastgate", "field": "savings.balance", "value": 84700, "unit": "GBP", "period_or_basis": "account balance as at 30 April 2026", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-eastgate", "line_start": 4, "line_end": 4, "quote": "Account balance: £84,700" }
+      ]
+    },
+    {
+      "id": "card-mw-04",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement shows a variable interest rate of 4.25% AER, matching the claimed rate and basis.",
+      "claim": { "subject_id": "sub-mw-eastgate", "field": "savings.interest-rate", "value": 4.25, "unit": "percent", "period_or_basis": "variable interest rate applied to the account", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-eastgate", "line_start": 5, "line_end": 5, "quote": "Interest rate: 4.25% AER variable" }
+      ]
+    },
+    {
+      "id": "card-mw-05",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The statement records interest paid of £3,412.68 in the year to 5 April 2026, matching the claim.",
+      "claim": { "subject_id": "sub-mw-eastgate", "field": "savings.interest-paid", "value": 3412.68, "unit": "GBP", "period_or_basis": "interest paid in the year to 5 April 2026", "as_of": "2026-04-05" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-eastgate", "line_start": 6, "line_end": 6, "quote": "Interest paid in the year to 5 April 2026: £3,412.68" }
+      ]
+    },
+    {
+      "id": "card-mw-06",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The adviser states Margaret's own teaching pension is £14,050 a year, in payment, matching the claim.",
+      "claim": { "subject_id": "sub-mw-margaret", "field": "pension.db-annual-benefit", "value": 14050, "unit": "GBP/year", "period_or_basis": "annual pension from Margaret's own teaching service, in payment", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 6, "line_end": 6, "quote": "Adviser (Sarah Hall): Your own pension from teaching is £14,050 a year, and the survivor's pension from Alan's Sefton scheme is £4,620 a year." }
+      ]
+    },
+    {
+      "id": "card-mw-07",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The adviser confirms Margaret's State Pension is £230.25 a week after the April 2026 uprating, matching the claim.",
+      "claim": { "subject_id": "sub-mw-margaret", "field": "state-pension.weekly-amount", "value": 230.25, "unit": "GBP/week", "period_or_basis": "current weekly State Pension after the April 2026 uprating", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 8, "line_end": 8, "quote": "Adviser (Sarah Hall): Your State Pension is £230.25 a week now after the April uprating." }
+      ]
+    },
+    {
+      "id": "card-mw-08",
+      "category": "correct",
+      "expected_verdict": "supported",
+      "rationale": "The Sefton statement confirms the survivor's annual pension as £4,620, in payment from 14 March 2023, matching the claim.",
+      "claim": { "subject_id": "sub-mw-sefton", "field": "pension.db-annual-benefit", "value": 4620, "unit": "GBP/year", "period_or_basis": "survivor's annual pension from Alan Whitfield's Sefton service, in payment", "as_of": "2026-03-28" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-sefton", "line_start": 4, "line_end": 5, "quote": "Survivor's annual pension: £4,620\nPayable from: 14 March 2023, reviewed each April" }
+      ]
+    },
+    {
+      "id": "card-mw-09",
+      "category": "wrong-subject",
+      "expected_verdict": "unsupported",
+      "rationale": "The £4,620 a year is the survivor's pension from Alan's Sefton scheme; Margaret's own teaching pension is the £14,050 figure in the same sentence.",
+      "claim": { "subject_id": "sub-mw-margaret", "field": "pension.db-annual-benefit", "value": 4620, "unit": "GBP/year", "period_or_basis": "annual pension from Margaret's own teaching service, in payment", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 6, "line_end": 6, "quote": "Adviser (Sarah Hall): Your own pension from teaching is £14,050 a year, and the survivor's pension from Alan's Sefton scheme is £4,620 a year." }
+      ]
+    },
+    {
+      "id": "card-mw-10",
+      "category": "stale-value",
+      "expected_verdict": "unsupported",
+      "rationale": "The £260,000 figure is the fund value when drawdown started in 2021; the claim presents it as the current drawdown fund value.",
+      "claim": { "subject_id": "sub-mw-dunston", "field": "pension.plan-value", "value": 260000, "unit": "GBP", "period_or_basis": "drawdown fund value at the date of the meeting", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 4, "line_end": 4, "quote": "Margaret Whitfield: It was £260,000 when I started taking the income in 2021, before the markets wobbled." }
+      ]
+    },
+    {
+      "id": "card-mw-11",
+      "category": "stale-value",
+      "expected_verdict": "unsupported",
+      "rationale": "The £92,000 figure is what the savings stood at when Alan died; Margaret says they are less now, and the claim presents it as the current balance.",
+      "claim": { "subject_id": "sub-mw-eastgate", "field": "savings.balance", "value": 92000, "unit": "GBP", "period_or_basis": "account balance at the date of the meeting", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 13, "line_end": 13, "quote": "Margaret Whitfield: When Alan died we had about £92,000 in savings; it's less now, what with the new boiler and the trip to see my sister in Toronto." }
+      ]
+    },
+    {
+      "id": "card-mw-12",
+      "category": "hypothetical",
+      "expected_verdict": "unsupported",
+      "rationale": "The £1,200 a week figure is an illustrative planning assumption of what care fees could cost; the claim presents it as a fee currently payable.",
+      "claim": { "subject_id": "sub-mw-margaret", "field": "care.weekly-fee", "value": 1200, "unit": "GBP/week", "period_or_basis": "current weekly care-home fee payable", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 11, "line_end": 12, "quote": "Adviser (Sarah Hall): On care fees, it's worth planning ahead. If care fees of £1,200 a week were needed, the combined pot would last about nine and a half years.\nAdviser (Sarah Hall): That's an illustration for planning, not a forecast of what care will cost." }
+      ]
+    },
+    {
+      "id": "card-mw-13",
+      "category": "unsupported",
+      "expected_verdict": "unsupported",
+      "rationale": "The statement puts the balance at £84,700; the claimed £85,000 appears nowhere in the evidence span.",
+      "claim": { "subject_id": "sub-mw-eastgate", "field": "savings.balance", "value": 85000, "unit": "GBP", "period_or_basis": "account balance as at 30 April 2026", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-eastgate", "line_start": 4, "line_end": 4, "quote": "Account balance: £84,700" }
+      ]
+    },
+    {
+      "id": "card-mw-14",
+      "category": "wrong-basis",
+      "expected_verdict": "unsupported",
+      "rationale": "The £11,400 is the gross withdrawal for the tax year, marked gross in the statement; the claimed net-of-tax basis is not supported.",
+      "claim": { "subject_id": "sub-mw-dunston", "field": "drawdown.annual-income", "value": 11400, "unit": "GBP/year", "period_or_basis": "net annual income received from drawdown after tax", "as_of": "2026-04-30" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-dunston", "line_start": 7, "line_end": 7, "quote": "Withdrawals in the 2025/26 tax year: £11,400 (gross)" }
+      ]
+    },
+    {
+      "id": "card-mw-15",
+      "category": "conflict",
+      "expected_verdict": "unsupported",
+      "rationale": "Margaret's recollection (£225,000) and the Dunston statement (£211,340) disagree, and the claimed £219,000 matches neither; the value cannot be accepted without resolution.",
+      "claim": { "subject_id": "sub-mw-dunston", "field": "pension.plan-value", "value": 219000, "unit": "GBP", "period_or_basis": "drawdown fund value at the date of the meeting", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 2, "line_end": 2, "quote": "Margaret Whitfield: Steady, thank you. The Dunston pot's about £225,000 still, I believe." },
+        { "artifact_id": "art-mw-dunston", "line_start": 4, "line_end": 4, "quote": "Drawdown fund value: £211,340" }
+      ]
+    },
+    {
+      "id": "card-mw-16",
+      "category": "conflict",
+      "expected_verdict": "unsupported",
+      "rationale": "Margaret's recollection (£4,400) and the Sefton statement (£4,620) disagree, and the claimed £4,500 matches neither; the value cannot be accepted without resolution.",
+      "claim": { "subject_id": "sub-mw-sefton", "field": "pension.db-annual-benefit", "value": 4500, "unit": "GBP/year", "period_or_basis": "survivor's annual pension from Alan Whitfield's Sefton service, in payment", "as_of": "2026-05-12" },
+      "evidence_spans": [
+        { "artifact_id": "art-mw-transcript", "line_start": 7, "line_end": 7, "quote": "Margaret Whitfield: Alan's scheme pays me about £4,400 a year I think — it's never the figure I remember." },
+        { "artifact_id": "art-mw-sefton", "line_start": 4, "line_end": 4, "quote": "Survivor's annual pension: £4,620" }
+      ]
+    }
+  ]
+}
