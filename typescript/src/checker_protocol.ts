@@ -191,7 +191,8 @@ export function validateCheckerProtocol(data: unknown): string[] {
     for (const [name, modelId] of Object.entries(llm.models)) {
       if (!isNonEmptyString(modelId)) add(`llm_checkers.models.${name}: must be a non-empty model ID`);
     }
-    if (!Array.isArray(llm.verdicts) || !LLM_VERDICTS.every((v, i) => llm.verdicts[i] === v)) {
+    const verdicts: unknown = llm.verdicts;
+    if (!Array.isArray(verdicts) || !LLM_VERDICTS.every((v, i) => verdicts[i] === v)) {
       add(`llm_checkers.verdicts: must be exactly ${LLM_VERDICTS.join(", ")}`);
     }
     const prompts = llm.prompts;
