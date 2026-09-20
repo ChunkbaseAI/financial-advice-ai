@@ -1,0 +1,93 @@
+{
+  "format_version": 1,
+  "roster_version": "1.0.0",
+  "description": "Frozen identity-only ID-to-name roster for the checker experiment. Names are the case-set names with person-attribution parentheticals removed.",
+  "case_set_version": "1.0.0",
+  "identity_only_rule": "Policy names omit person-attribution parentheticals present in the case set (for example \"(Dev Patel's service)\"); nothing else is changed.",
+  "entries": [
+    {
+      "subject_id": "sub-sp-priya",
+      "household_id": "hh-sp",
+      "kind": "person",
+      "name": "Priya Sharma"
+    },
+    {
+      "subject_id": "sub-sp-dev",
+      "household_id": "hh-sp",
+      "kind": "person",
+      "name": "Dev Patel"
+    },
+    {
+      "subject_id": "sub-sp-aldegate",
+      "household_id": "hh-sp",
+      "kind": "policy",
+      "name": "Aldgate Life personal pension, plan 4471 002 833"
+    },
+    {
+      "subject_id": "sub-sp-bramwell",
+      "household_id": "hh-sp",
+      "kind": "policy",
+      "name": "Bramwell Bank stocks and shares ISA, account 2201 8834"
+    },
+    {
+      "subject_id": "sub-sp-calderdale",
+      "household_id": "hh-sp",
+      "kind": "policy",
+      "name": "Calderdale Building Society mortgage, account 8821 4470"
+    },
+    {
+      "subject_id": "sub-sp-pennine",
+      "household_id": "hh-sp",
+      "kind": "policy",
+      "name": "Pennine Teachers' Pension Scheme"
+    },
+    {
+      "subject_id": "sub-ok-chidi",
+      "household_id": "hh-ok",
+      "kind": "person",
+      "name": "Chidi Okafor"
+    },
+    {
+      "subject_id": "sub-ok-ngozi",
+      "household_id": "hh-ok",
+      "kind": "person",
+      "name": "Ngozi Okafor"
+    },
+    {
+      "subject_id": "sub-ok-meridian",
+      "household_id": "hh-ok",
+      "kind": "policy",
+      "name": "Meridian Group Pension Scheme defined contribution plan, member MGP 77240"
+    },
+    {
+      "subject_id": "sub-ok-nhs",
+      "household_id": "hh-ok",
+      "kind": "policy",
+      "name": "NHS Pension Scheme, 1995 section"
+    },
+    {
+      "subject_id": "sub-mw-margaret",
+      "household_id": "hh-mw",
+      "kind": "person",
+      "name": "Margaret Whitfield"
+    },
+    {
+      "subject_id": "sub-mw-dunston",
+      "household_id": "hh-mw",
+      "kind": "policy",
+      "name": "Dunston & Vale Investments SIPP, account 7712 0065"
+    },
+    {
+      "subject_id": "sub-mw-eastgate",
+      "household_id": "hh-mw",
+      "kind": "policy",
+      "name": "Eastgate Bank savings account, 0011 4482"
+    },
+    {
+      "subject_id": "sub-mw-sefton",
+      "household_id": "hh-mw",
+      "kind": "policy",
+      "name": "Sefton Teachers' Pension Scheme survivor benefit"
+    }
+  ]
+}

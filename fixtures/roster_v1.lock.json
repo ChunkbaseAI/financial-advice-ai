@@ -1,0 +1,9 @@
+{
+  "roster_file": "roster_v1.json",
+  "roster_version": "1.0.0",
+  "case_set_version": "1.0.0",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "sha256": "e44caa75cf33ecb90c18d16bff86a5b1b0beaaa32f73bb8d17a0fcfc6381eea1",
+  "frozen_at": "2026-09-20",
+  "note": "Frozen identity-only roster for the checker experiment (issue #2), derived from the frozen case set. Names are case-set names with person-attribution parentheticals removed; nothing else is changed. Every test verifies this hash. Re-freeze only for an intended change, and record the reason in the write-up."
+}

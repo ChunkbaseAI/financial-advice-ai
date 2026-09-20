@@ -9,6 +9,7 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "freeze:case-set": "bun src/freeze_case_set.ts",
+    "freeze:roster": "bun src/freeze_roster.ts",
     "record:rules-run": "bun src/record_rules_run.ts"
   },
   "devDependencies": {
