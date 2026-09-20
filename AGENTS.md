@@ -61,9 +61,12 @@ Notebooks may teach and explore. They must not be the only executable form of a 
 
 ## Repository state
 
-This repository is at bootstrap. Do not invent a mature directory map in documentation before the first examples establish it.
+The first fixture set has landed: the Claim-card case set for the checker experiment, shared JSON in `fixtures/`, with schema, value-presence and frozen-lock checks mirrored in TypeScript and Python. See [docs/case-set-v1.md](./docs/case-set-v1.md).
 
-When the initial examples land, update this file with the real Python and TypeScript commands. Python examples use `uv`. TypeScript examples use Bun. Keep shared input and expected-output fixtures language-neutral where possible.
+- TypeScript (Bun): `cd typescript && bun install && bun test`; typecheck with `bun run typecheck`; re-freeze the case set with `bun run freeze:case-set`.
+- Python (uv): `cd python && uv sync && uv run pytest`.
+
+Keep shared input and expected-output fixtures language-neutral where possible. Do not invent a mature directory map in documentation beyond what the landed examples establish.
 
 ## Verification
 

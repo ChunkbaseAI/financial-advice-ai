@@ -8,6 +8,8 @@ The repository starts with a complete transcript-to-review path:
 
 It will show runnable Python and TypeScript implementations, several architecture choices, synthetic inputs, evaluation methods, and the failures that change the design. Core workflows should not exist only as notebooks.
 
+The first fixture set is in place: the synthetic Claim-card case set for the checker experiment — [docs/case-set-v1.md](./docs/case-set-v1.md), language-neutral JSON in `fixtures/`, with schema, value-presence and frozen-lock checks in `typescript/` (Bun) and `python/` (uv).
+
 This repository teaches. Reusable contracts belong in AdviceKit, private evaluation belongs in the Advice Harness, and production behaviour belongs in the relevant Chunkbase product repository.
 
 ## Contributing
