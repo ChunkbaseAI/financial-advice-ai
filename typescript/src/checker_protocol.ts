@@ -33,10 +33,10 @@ export interface DecisionThresholds {
 export interface JevQuestionSpec {
   type: string;
   instructions: string;
-  fixed_options?: Record<string, string>;
-  specific_options?: string;
-  option_order?: string;
-  criteria?: Record<string, string>;
+  fixed_options?: Record<string, string> | undefined;
+  specific_options?: string | undefined;
+  option_order?: string | undefined;
+  criteria?: Record<string, string> | undefined;
 }
 
 export interface JevSpec {

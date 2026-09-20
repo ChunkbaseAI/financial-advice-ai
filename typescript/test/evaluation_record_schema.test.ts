@@ -60,6 +60,7 @@ function evaluation(overrides: Partial<EvaluationRecord> = {}): EvaluationRecord
     model_input: MODEL_INPUT,
     input_hash: `sha256:${HEX_64}`,
     model: MODEL,
+    raw_answer: null,
     attempts: [attempt()],
     first_attempt_invalid: false,
     retried: false,

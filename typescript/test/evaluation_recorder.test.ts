@@ -85,6 +85,7 @@ function successInput(overrides: Partial<EvaluationRecordInput> = {}): Evaluatio
     modelInput: MODEL_INPUT,
     inputHash: `sha256:${HEX_64}`,
     model: { id: "typesafe-ai/jev", version: "jev-1.13.0", provider: "typesafe-ai", generation_id: "gen_1" },
+    rawAnswer: null,
     attempts: [
       {
         index: 1,

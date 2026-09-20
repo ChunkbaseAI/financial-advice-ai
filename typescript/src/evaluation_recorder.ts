@@ -34,19 +34,23 @@ export interface EvaluationRecorderParams {
   now?: () => Date;
 }
 
-export interface EvaluationRecordInput {
+export interface CheckerCardResult {
+  model: ModelReport | null;
+  rawAnswer?: unknown;
+  attempts: EvaluationAttempt[];
+  firstAttemptInvalid: boolean;
+  retried: boolean;
+  decision: EvaluationDecision | null;
+  error: EvaluationRecordError | null;
+}
+
+export interface EvaluationRecordInput extends CheckerCardResult {
   sampleIndex: number;
   repeatIndex: number;
   cardId: string;
   originalClaim: Claim;
   modelInput: ModelInput;
   inputHash: string;
-  model: ModelReport | null;
-  attempts: EvaluationAttempt[];
-  firstAttemptInvalid: boolean;
-  retried: boolean;
-  decision: EvaluationDecision | null;
-  error: EvaluationRecordError | null;
 }
 
 export function evaluationUsageAggregate(attempts: EvaluationAttempt[]): GatewayUsage | null {
@@ -140,6 +144,7 @@ export class EvaluationRecorder {
       model_input: input.modelInput,
       input_hash: input.inputHash,
       model: input.model,
+      raw_answer: input.rawAnswer ?? null,
       attempts: input.attempts,
       first_attempt_invalid: input.firstAttemptInvalid,
       retried: input.retried,
