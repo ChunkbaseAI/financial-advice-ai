@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "run_id": "rules-20260920-78890e4",
+  "created_at": "2026-09-20T03:34:48.915Z",
+  "case_set_version": "1.0.0",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "code_commit": "78890e49c0e97069cbc5f49cf4cf7b469ee98ee0",
+  "repeat_count": 1,
+  "prompt_set_sha256": "98b96bc02005b22dd4a378da3e3ab95c96f67077dde8206d3b349f26f8d673cd",
+  "checkers": [
+    "rules"
+  ]
+}

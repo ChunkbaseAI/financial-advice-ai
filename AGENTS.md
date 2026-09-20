@@ -63,7 +63,9 @@ Notebooks may teach and explore. They must not be the only executable form of a 
 
 The first fixture set has landed: the Claim-card case set for the checker experiment, shared JSON in `fixtures/`, with schema, value-presence and frozen-lock checks mirrored in TypeScript and Python. See [docs/case-set-v1.md](./docs/case-set-v1.md).
 
-- TypeScript (Bun): `cd typescript && bun install && bun test`; typecheck with `bun run typecheck`; re-freeze the case set with `bun run freeze:case-set`.
+The checker experiment's run recorder has landed (TypeScript, issue #4): one self-describing record per model call plus a run manifest, gateway-reported usage only, errors and 429s preserved, with the offline rules-checker run frozen in `fixtures/rules_run_v1/`. See [docs/run-recorder.md](./docs/run-recorder.md). A Python mirror is a welcome sibling-language contribution.
+
+- TypeScript (Bun): `cd typescript && bun install && bun test`; typecheck with `bun run typecheck`; re-freeze the case set with `bun run freeze:case-set`; re-record the rules run with `bun run record:rules-run`.
 - Python (uv): `cd python && uv sync && uv run pytest`.
 
 Keep shared input and expected-output fixtures language-neutral where possible. Do not invent a mature directory map in documentation beyond what the landed examples establish.

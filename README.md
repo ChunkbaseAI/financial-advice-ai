@@ -10,6 +10,8 @@ It will show runnable Python and TypeScript implementations, several architectur
 
 The first fixture set is in place: the synthetic Claim-card case set for the checker experiment — [docs/case-set-v1.md](./docs/case-set-v1.md), language-neutral JSON in `fixtures/`, with schema, value-presence and frozen-lock checks in `typescript/` (Bun) and `python/` (uv).
 
+The checker experiment's run recorder has landed: a versioned, self-describing record for every model call — gateway-reported usage only, errors and 429s preserved — with an offline rules-checker run recorded in `fixtures/rules_run_v1/` ([docs/run-recorder.md](./docs/run-recorder.md), TypeScript).
+
 This repository teaches. Reusable contracts belong in AdviceKit, private evaluation belongs in the Advice Harness, and production behaviour belongs in the relevant Chunkbase product repository.
 
 ## Contributing

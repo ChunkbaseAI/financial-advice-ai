@@ -116,5 +116,5 @@ Everything runs offline; no credentials are required.
 
 ## Next steps
 
-- #4 builds the run recorder that will capture one versioned record per model call against these cards.
+- [#4](https://github.com/ChunkbaseAI/financial-advice-ai/issues/4) builds the run recorder that will capture one versioned record per model call against these cards — landed, see [run-recorder docs](./run-recorder.md).
 - #2 runs the checker comparison (rules, Jev, and the generative checkers) on this frozen set.
