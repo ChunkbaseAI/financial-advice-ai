@@ -85,7 +85,7 @@ describe("protocol lock", () => {
     const lock = verifyProtocolLock(DEFAULT_PROTOCOL_PATH, DEFAULT_PROTOCOL_LOCK_PATH);
     const protocol = loadProtocol(DEFAULT_PROTOCOL_PATH, DEFAULT_PROTOCOL_LOCK_PATH);
     expect(lock.protocolVersion).toBe(protocol.protocol_version);
-    expect(protocol.protocol_version).toBe("0.2.0");
+    expect(protocol.protocol_version).toBe("0.3.0");
     expect(validateCheckerProtocol(protocol)).toEqual([]);
   });
 
@@ -111,7 +111,7 @@ describe("verifyExperimentFreeze", () => {
       protocolPath: DEFAULT_PROTOCOL_PATH,
       protocolLockPath: DEFAULT_PROTOCOL_LOCK_PATH,
     });
-    expect(freeze.protocolVersion).toBe("0.2.0");
+    expect(freeze.protocolVersion).toBe("0.3.0");
     expect(freeze.caseSetVersion).toBe("1.0.0");
     expect(freeze.caseSetSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(freeze.rosterSha256).toMatch(/^[0-9a-f]{64}$/);

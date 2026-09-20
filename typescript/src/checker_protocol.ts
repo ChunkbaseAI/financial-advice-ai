@@ -6,8 +6,10 @@ export const PROTOCOL_FORMAT_VERSION = 1;
 
 export const PROTOCOL_V0_1_PATH = new URL("../../fixtures/checker_protocol_v0_1.json", import.meta.url);
 export const PROTOCOL_V0_1_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_1.lock.json", import.meta.url);
-export const DEFAULT_PROTOCOL_PATH = new URL("../../fixtures/checker_protocol_v0_2.json", import.meta.url);
-export const DEFAULT_PROTOCOL_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_2.lock.json", import.meta.url);
+export const PROTOCOL_V0_2_PATH = new URL("../../fixtures/checker_protocol_v0_2.json", import.meta.url);
+export const PROTOCOL_V0_2_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_2.lock.json", import.meta.url);
+export const DEFAULT_PROTOCOL_PATH = new URL("../../fixtures/checker_protocol_v0_3.json", import.meta.url);
+export const DEFAULT_PROTOCOL_LOCK_PATH = new URL("../../fixtures/checker_protocol_v0_3.lock.json", import.meta.url);
 
 export const LLM_VERDICTS = ["supported", "unsupported", "uncertain"] as const;
 export type LlmVerdict = (typeof LLM_VERDICTS)[number];
@@ -79,6 +81,14 @@ export interface CheckerProtocol {
   retry_policy: { max_retries: number } & Record<string, unknown>;
   outcomes: Record<string, string>;
   limitations: string[];
+  run_compatibility?: RunCompatibility[] | undefined;
+}
+
+export interface RunCompatibility {
+  protocol_version: string;
+  sha256: string;
+  scope: string;
+  reason: string;
 }
 
 export class ProtocolValidationError extends Error {
@@ -242,6 +252,22 @@ export function validateCheckerProtocol(data: unknown): string[] {
     add("limitations: must state at least one limitation, written before any performance claim");
   }
 
+  if (data.run_compatibility !== undefined) {
+    if (!Array.isArray(data.run_compatibility)) {
+      add("run_compatibility: must be a list of declared predecessor protocols");
+    } else {
+      for (const [i, entry] of data.run_compatibility.entries()) {
+        const path = `run_compatibility[${i}]`;
+        if (!isRecord(entry) || !isNonEmptyString(entry.protocol_version) || !isNonEmptyString(entry.sha256) ||
+            !isNonEmptyString(entry.scope) || !isNonEmptyString(entry.reason)) {
+          add(`${path}: must declare protocol_version, sha256, scope and reason for a predecessor whose runs stay valid`);
+        } else if (!/^[0-9a-f]{64}$/.test(entry.sha256)) {
+          add(`${path}.sha256: must be 64 lowercase hex characters`);
+        }
+      }
+    }
+  }
+
   return violations;
 }
 
@@ -299,6 +325,8 @@ export interface ExperimentFreeze {
   rosterSha256: string;
   protocolVersion: string;
   protocolSha256: string;
+  /** Protocol hashes whose recorded runs stay valid under the current protocol, per its frozen declaration. */
+  compatibleProtocolHashes: string[];
 }
 
 function sha256OfFile(path: string | URL): string {
@@ -339,8 +367,13 @@ export function verifyExperimentFreeze(paths: ExperimentFreezePaths): Experiment
   }
 
   const protocolLock = verifyProtocolLock(paths.protocolPath, paths.protocolLockPath);
+  const protocol = JSON.parse(readFileSync(paths.protocolPath, "utf8")) as CheckerProtocol;
   const caseSet = JSON.parse(readFileSync(paths.caseSetPath, "utf8")) as { case_set_version: string };
   const roster = JSON.parse(readFileSync(paths.rosterPath, "utf8")) as { roster_version: string };
+
+  const compatible = Array.isArray(protocol.run_compatibility)
+    ? protocol.run_compatibility.map((entry) => entry.sha256)
+    : [];
 
   return {
     caseSetVersion: caseSet.case_set_version,
@@ -349,5 +382,6 @@ export function verifyExperimentFreeze(paths: ExperimentFreezePaths): Experiment
     rosterSha256,
     protocolVersion: protocolLock.protocolVersion,
     protocolSha256: protocolLock.sha256,
+    compatibleProtocolHashes: compatible,
   };
 }

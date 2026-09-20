@@ -57,10 +57,13 @@ const scoredRuns = [];
 const timingRuns = [];
 for (const runDir of runDirs) {
   const scored = scoreArmRun(runDir, cards);
-  if (scored.manifest.protocol_sha256 !== freeze.protocolSha256) {
+  const protocolAccepted = scored.manifest.protocol_sha256 === freeze.protocolSha256 ||
+    freeze.compatibleProtocolHashes.includes(scored.manifest.protocol_sha256);
+  if (!protocolAccepted) {
     console.error(
       `run ${scored.armName} was recorded under protocol sha256 ${scored.manifest.protocol_sha256}, ` +
-        `not the frozen ${freeze.protocolSha256}; it cannot be scored into this results document`,
+        `which is neither the frozen ${freeze.protocolSha256} nor a declared compatible predecessor; ` +
+        "it cannot be scored into this results document",
     );
     process.exit(1);
   }
