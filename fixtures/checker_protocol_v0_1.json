@@ -18,7 +18,7 @@
     "typesafe_systemone_path": "/typesafe/v1/systemone",
     "generation_lookup_path": "/v1/generation",
     "models_pricing_path": "/v1/models",
-    "note": "All model calls route through the Vercel AI Gateway so latency and cost are measured on the same network path for every checker. Usage, cost and latency are gateway-reported only, never client-side estimates."
+    "note": "All model calls route through the Vercel AI Gateway so latency and cost are measured on the same network path for every checker. Usage, cost and latency are gateway-reported only, never client-side estimates: tokens and charged cost come from the generation lookup (the gateway ingests usage events asynchronously, so lookups are deferred until after an arm's calls complete), and the gateway-reported market cost is preserved alongside the charged cost."
   },
   "repeats": {
     "scored": 3,

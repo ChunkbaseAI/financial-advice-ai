@@ -61,10 +61,24 @@ export interface GenerationInfo {
   id: string;
   model: string;
   provider: string;
+  /** The gateway-reported charged cost (total_cost); 0 when the call is covered by credits. */
   cost: number | null;
+  /** The gateway-reported list-price cost (market_cost): what the call would cost at list price. */
+  marketCost: number | null;
+  /** Gateway-reported latency in ms; 0 or null when the gateway reports none for this generation. */
   latency: number | null;
+  /** Gateway-reported total generation time in ms, present when latency is not. */
+  generationTime: number | null;
   input_tokens: number | null;
   output_tokens: number | null;
+  /** The raw lookup payload, preserved verbatim in run records. */
+  raw: Record<string, unknown>;
+}
+
+export function generationLatencyMs(info: GenerationInfo): number | null {
+  if (info.latency !== null && info.latency > 0) return info.latency;
+  if (info.generationTime !== null && info.generationTime > 0) return info.generationTime;
+  return null;
 }
 
 export type FetchLike = (input: string | URL, init?: RequestInit) => Promise<Response>;
@@ -180,15 +194,20 @@ export class GatewayClient {
       const text = await response.text().catch(() => "");
       throw new GatewayHttpError(response.status, `generation lookup returned HTTP ${response.status}: ${text.slice(0, 500)}`);
     }
-    const body = (await response.json()) as Record<string, unknown>;
+    const parsed = (await response.json()) as Record<string, unknown>;
+    const body = isRecord(parsed.data) ? parsed.data : parsed;
+    const numberOrNull = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
     return {
       id: typeof body.id === "string" ? body.id : generationId,
       model: typeof body.model === "string" ? body.model : "",
-      provider: typeof body.providerName === "string" ? body.providerName : "",
-      cost: typeof body.totalCost === "number" ? body.totalCost : null,
-      latency: typeof body.latency === "number" ? body.latency : null,
-      input_tokens: typeof body.promptTokens === "number" ? body.promptTokens : null,
-      output_tokens: typeof body.completionTokens === "number" ? body.completionTokens : null,
+      provider: typeof body.provider_name === "string" ? body.provider_name : "",
+      cost: numberOrNull(body.total_cost),
+      marketCost: numberOrNull(body.market_cost),
+      latency: numberOrNull(body.latency),
+      generationTime: numberOrNull(body.generation_time),
+      input_tokens: numberOrNull(body.tokens_prompt),
+      output_tokens: numberOrNull(body.tokens_completion),
+      raw: body,
     };
   }
 
@@ -200,25 +219,44 @@ export class GatewayClient {
     const delayMs = options.delayMs ?? 1_000;
     for (let attempt = 1; attempt <= tries; attempt += 1) {
       const info = await this.lookupGeneration(generationId);
-      if (info !== null && info.latency !== null) return info;
+      if (info !== null && generationLatencyMs(info) !== null) return info;
       if (attempt < tries) await this.sleep(delayMs);
     }
     return null;
   }
 }
 
-export function chatAttemptUsage(
+export function attemptUsageFromGeneration(
   info: GenerationInfo | null,
   bodyTokens: { input_tokens: number; output_tokens: number } | null,
 ): GatewayUsage | null {
-  if (info === null || info.latency === null) return null;
+  if (info === null) return null;
+  const latency = generationLatencyMs(info);
+  if (latency === null) return null;
   const inputTokens = info.input_tokens ?? bodyTokens?.input_tokens ?? null;
   const outputTokens = info.output_tokens ?? bodyTokens?.output_tokens ?? null;
   if (inputTokens === null || outputTokens === null) return null;
   return {
-    latency_ms: info.latency,
+    latency_ms: latency,
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     cost: info.cost === null || info.cost === undefined ? null : { amount: info.cost, currency: "USD" },
   };
+}
+
+export function loadDotEnvFile(contents: string): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const line of contents.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0 || trimmed.startsWith("#")) continue;
+    const equals = trimmed.indexOf("=");
+    if (equals === -1) continue;
+    const key = trimmed.slice(0, equals).trim();
+    let value = trimmed.slice(equals + 1).trim();
+    if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
+      value = value.slice(1, -1);
+    }
+    values[key] = value;
+  }
+  return values;
 }

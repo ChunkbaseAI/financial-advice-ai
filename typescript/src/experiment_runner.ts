@@ -5,7 +5,7 @@ import { prepareModelInput, type ModelInput } from "./input_preparation.ts";
 import type { Roster } from "./roster.ts";
 import { checkValuePresence } from "./value_presence.ts";
 import { sha256Of } from "./hashing.ts";
-import { GatewayClient } from "./gateway_client.ts";
+import { attemptUsageFromGeneration, GatewayClient, type GenerationInfo } from "./gateway_client.ts";
 import { evaluateCardWithJev, assertJevStateWithinCap } from "./jev_checker.ts";
 import { evaluateCardWithLlm } from "./llm_checker.ts";
 import { EvaluationRecorder, type CheckerCardResult } from "./evaluation_recorder.ts";
@@ -86,6 +86,9 @@ export interface RunArmParams {
   client?: GatewayClient | undefined;
   now?: (() => Date) | undefined;
   onProgress?: ((done: number, total: number) => void) | undefined;
+  /** Wait before polling generation lookups; the gateway ingests usage events asynchronously. */
+  generationIngestionDelayMs?: number | undefined;
+  sleep?: ((ms: number) => Promise<void>) | undefined;
 }
 
 export interface RunArmResult {
@@ -173,6 +176,17 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
   let executionErrors = 0;
   let inputPreparationErrors = 0;
 
+  interface PendingRecord {
+    sampleIndex: number;
+    repeatIndex: number;
+    cardId: string;
+    originalClaim: (typeof prepared)[number]["card"]["claim"];
+    modelInput: ModelInput | null;
+    inputHash: string | null;
+    result: CheckerCardResult;
+  }
+  const pending: PendingRecord[] = [];
+
   for (let repeatIndex = 0; repeatIndex < params.repeatCount; repeatIndex += 1) {
     for (const p of prepared) {
       let result: CheckerCardResult;
@@ -213,24 +227,47 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
       if (result.decision?.outcome === "pass") passed += 1;
       if (result.decision?.outcome === "review") reviewed += 1;
 
-      recorder.recordEvaluation({
+      pending.push({
         sampleIndex: p.sampleIndex,
         repeatIndex,
         cardId: p.card.id,
         originalClaim: p.card.claim,
         modelInput: p.input,
         inputHash: p.inputHash,
-        model: result.model,
-        rawAnswer: result.rawAnswer,
-        attempts: result.attempts,
-        firstAttemptInvalid: result.firstAttemptInvalid,
-        retried: result.retried,
-        decision: result.decision,
-        error: result.error,
+        result,
       });
       done += 1;
       params.onProgress?.(done, total);
     }
+  }
+
+  if (networked) {
+    const completed = await completeGenerations(pending, params.client!, {
+      ingestionDelayMs: params.generationIngestionDelayMs ?? 25_000,
+      sleep: params.sleep ?? ((ms) => Bun.sleep(ms)),
+      onLookup: (doneLookups, totalLookups) => params.onProgress?.(done + doneLookups, totalLookups),
+    });
+    passed = completed.passed;
+    reviewed = completed.reviewed;
+    executionErrors = completed.executionErrors;
+  }
+
+  for (const p of pending) {
+    recorder.recordEvaluation({
+      sampleIndex: p.sampleIndex,
+      repeatIndex: p.repeatIndex,
+      cardId: p.cardId,
+      originalClaim: p.originalClaim,
+      modelInput: p.modelInput,
+      inputHash: p.inputHash,
+      model: p.result.model,
+      rawAnswer: p.result.rawAnswer,
+      attempts: p.result.attempts,
+      firstAttemptInvalid: p.result.firstAttemptInvalid,
+      retried: p.result.retried,
+      decision: p.result.decision,
+      error: p.result.error,
+    });
   }
 
   return {
@@ -241,4 +278,91 @@ export async function runArm(params: RunArmParams): Promise<RunArmResult> {
     executionErrors,
     inputPreparationErrors,
   };
+}
+
+interface CompleteGenerationsOptions {
+  ingestionDelayMs: number;
+  sleep: (ms: number) => Promise<void>;
+  onLookup?: (done: number, total: number) => void;
+}
+
+async function completeGenerations(
+  pending: { result: CheckerCardResult }[],
+  client: GatewayClient,
+  options: CompleteGenerationsOptions,
+): Promise<{ passed: number; reviewed: number; executionErrors: number }> {
+  const ids = new Set<string>();
+  for (const { result } of pending) {
+    for (const attempt of result.attempts) {
+      if (attempt.generation_id !== undefined && attempt.generation_id !== null) ids.add(attempt.generation_id);
+    }
+  }
+
+  const lookups = new Map<string, GenerationInfo | null>();
+  if (ids.size > 0) {
+    await options.sleep(options.ingestionDelayMs);
+    let doneLookups = 0;
+    for (const id of ids) {
+      lookups.set(id, await client.lookupGenerationWithPolling(id, { tries: 10, delayMs: 2_500 }));
+      doneLookups += 1;
+      options.onLookup?.(doneLookups, ids.size);
+    }
+  }
+
+  let passed = 0;
+  let reviewed = 0;
+  let executionErrors = 0;
+
+  for (const { result } of pending) {
+    const lastAttempt = result.attempts[result.attempts.length - 1];
+    let lastUsageMissing = false;
+    for (const attempt of result.attempts) {
+      const id = attempt.generation_id;
+      if (id === undefined || id === null) continue;
+      const info = lookups.get(id) ?? null;
+      if (info === null) {
+        if (attempt.error === null) {
+          attempt.error = {
+            kind: "other",
+            message: "the generation lookup never reported usage for this call; the response is preserved but not recorded as a success",
+          };
+          lastUsageMissing = true;
+        }
+        continue;
+      }
+      attempt.generation = info.raw;
+      const usage = attemptUsageFromGeneration(info, attempt.body_usage ?? null);
+      if (usage !== null) attempt.usage = usage;
+      else if (attempt.error === null) {
+        attempt.error = {
+          kind: "other",
+          message: "the generation lookup reported no usable usage for this call; the response is preserved but not recorded as a success",
+        };
+        lastUsageMissing = true;
+      }
+    }
+
+    if (lastUsageMissing && result.decision !== null) {
+      // A successful answer without gateway-reported usage is not recorded as a pass: the schema forbids it.
+      result.decision = null;
+      result.error = {
+        kind: "other",
+        message:
+          "the generation lookup never reported usage for this call; the answer is not recorded without gateway-reported usage, never as a client-side estimate",
+      };
+    }
+
+    if (result.model !== null && lastAttempt?.generation !== undefined && lastAttempt?.generation !== null) {
+      const model = typeof lastAttempt.generation["model"] === "string" ? lastAttempt.generation["model"] : null;
+      const provider = typeof lastAttempt.generation["provider_name"] === "string" ? lastAttempt.generation["provider_name"] : null;
+      if (model !== null && model.length > 0) result.model.version = model;
+      if (provider !== null && provider.length > 0) result.model.provider = provider;
+    }
+
+    if (result.error !== null && result.error.kind !== "input-preparation") executionErrors += 1;
+    if (result.decision?.outcome === "pass") passed += 1;
+    if (result.decision?.outcome === "review") reviewed += 1;
+  }
+
+  return { passed, reviewed, executionErrors };
 }

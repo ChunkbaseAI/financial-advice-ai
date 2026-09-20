@@ -1,8 +1,15 @@
 import type { ErrorKind, EvaluationAttempt, GatewayUsage, RunRecordError } from "./run_record_schema.ts";
 
+export interface AttemptEvidence {
+  /** The gateway generation id from the response, looked up after the batch so usage stays gateway-reported. */
+  generationId?: string | null;
+  /** Token counts reported in the response body, used as a fallback when the lookup reports none. */
+  bodyUsage?: { input_tokens: number; output_tokens: number } | null;
+}
+
 export type AttemptOutcome =
-  | { status: "parsed"; answer: unknown; rawResponse: unknown; usage: GatewayUsage | null; elapsedMs: number }
-  | { status: "invalid-response"; rawResponse: unknown; usage: GatewayUsage | null; elapsedMs: number; message: string }
+  | ({ status: "parsed"; answer: unknown; rawResponse: unknown; usage: GatewayUsage | null; elapsedMs: number } & AttemptEvidence)
+  | ({ status: "invalid-response"; rawResponse: unknown; usage: GatewayUsage | null; elapsedMs: number; message: string } & AttemptEvidence)
   | {
       status: "transport-error";
       error: { kind: ErrorKind; message: string; status?: number };
@@ -40,6 +47,8 @@ function toEvaluationAttempt(outcome: AttemptOutcome, index: number): Evaluation
         usage: outcome.usage,
         elapsed_ms: outcome.elapsedMs,
         error: null,
+        ...(outcome.generationId !== undefined ? { generation_id: outcome.generationId } : {}),
+        ...(outcome.bodyUsage !== undefined ? { body_usage: outcome.bodyUsage } : {}),
       };
     case "invalid-response":
       return {
@@ -49,6 +58,8 @@ function toEvaluationAttempt(outcome: AttemptOutcome, index: number): Evaluation
         usage: outcome.usage,
         elapsed_ms: outcome.elapsedMs,
         error: { kind: "invalid-response", message: outcome.message },
+        ...(outcome.generationId !== undefined ? { generation_id: outcome.generationId } : {}),
+        ...(outcome.bodyUsage !== undefined ? { body_usage: outcome.bodyUsage } : {}),
       };
     case "transport-error":
       return {

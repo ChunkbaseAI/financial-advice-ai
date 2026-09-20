@@ -273,6 +273,12 @@ export interface EvaluationAttempt {
   usage: GatewayUsage | null;
   elapsed_ms: number;
   error: RunRecordError | null;
+  /** The gateway generation id reported with the response; usage is looked up from it after the batch. */
+  generation_id?: string | null;
+  /** Token counts reported in the response body, kept as the fallback source. */
+  body_usage?: { input_tokens: number; output_tokens: number } | null;
+  /** The raw generation-lookup payload, preserved verbatim as the gateway-reported usage evidence. */
+  generation?: Record<string, unknown> | null;
 }
 
 export interface EvaluationRecordError {
@@ -482,6 +488,18 @@ export function validateEvaluationRecord(data: unknown): string[] {
       }
       if (attempt.error !== null && attempt.error !== undefined) {
         validateError(attempt.error, violations, `${path}.error`);
+      }
+      if (attempt.generation_id !== undefined && attempt.generation_id !== null && !isNonEmptyString(attempt.generation_id)) {
+        violations.push(`${path}.generation_id: must be the gateway generation id or null`);
+      }
+      if (attempt.body_usage !== undefined && attempt.body_usage !== null) {
+        const bodyUsage = attempt.body_usage as Record<string, unknown>;
+        if (!isRecord(bodyUsage) || !isNonNegativeInteger(bodyUsage.input_tokens) || !isNonNegativeInteger(bodyUsage.output_tokens)) {
+          violations.push(`${path}.body_usage: must carry the response-reported token counts or null`);
+        }
+      }
+      if (attempt.generation !== undefined && attempt.generation !== null && !isRecord(attempt.generation)) {
+        violations.push(`${path}.generation: must be the raw generation-lookup payload or null`);
       }
     });
     const retried = data.retried;

@@ -162,3 +162,119 @@ describe("runArm (input-preparation errors)", () => {
     expect(healthy.error).toBeNull();
   });
 });
+
+describe("runArm (deferred generation usage)", () => {
+  const jevArm: ArmDefinition = {
+    name: "jev",
+    checker: "jev",
+    modelId: "typesafe-ai/jev",
+    variant: "decomposed",
+    decisionPolicy: "probability-gated",
+    timingRun: false,
+  };
+
+  function jevBody(): Record<string, unknown> {
+    return {
+      model: "jev-1.13.0",
+      answers: {
+        ownership: { type: "choice", choice: "Priya Sharma", probabilities: { "Priya Sharma": 0.93, "Dev Patel": 0.07 } },
+        value_support: { type: "noul", noul: 0.95 },
+        time_support: { type: "noul", noul: 0.92 },
+      },
+      usage: { input_tokens: 640, output_tokens: 20 },
+      provider_metadata: {
+        gateway: {
+          cost: "0",
+          marketCost: "0.0000123",
+          generationId: "gen_test_1",
+          routing: { resolvedProvider: "typesafe-ai" },
+        },
+      },
+    };
+  }
+
+  function generationBody(): Record<string, unknown> {
+    return {
+      data: {
+        id: "gen_test_1",
+        model: "jev-1.13.0",
+        provider_name: "typesafe-ai",
+        total_cost: 0,
+        market_cost: 0.0000123,
+        latency: 180,
+        tokens_prompt: 640,
+        tokens_completion: 20,
+      },
+    };
+  }
+
+  test("fills usage from the deferred generation lookup and upgrades the model report", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "faai-runner-gen-"));
+    const client = new GatewayClient({
+      apiKey: "test-key",
+      fetch: ((url: string | URL) => {
+        const target = String(url);
+        if (target.includes("/typesafe/v1/systemone")) {
+          return Promise.resolve(new Response(JSON.stringify(jevBody()), { status: 200, headers: { "content-type": "application/json" } }));
+        }
+        if (target.includes("/v1/generation")) {
+          return Promise.resolve(new Response(JSON.stringify(generationBody()), { status: 200, headers: { "content-type": "application/json" } }));
+        }
+        return Promise.reject(new Error(`unexpected url ${target}`));
+      }) as unknown as typeof fetch,
+      sleep: async () => {},
+    });
+
+    const result = await runArm(
+      baseParams({ arm: jevArm, outputDir: dir, repeatCount: 1, client, generationIngestionDelayMs: 0, sleep: async () => {} }),
+    );
+    expect(result.recordCount).toBe(50);
+    expect(result.executionErrors).toBe(0);
+
+    const records = readFileSync(join(dir, "records.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+    for (const record of records) {
+      expect(record.attempts[0].generation_id).toBe("gen_test_1");
+      expect(record.attempts[0].usage).toEqual({
+        latency_ms: 180,
+        input_tokens: 640,
+        output_tokens: 20,
+        cost: { amount: 0, currency: "USD" },
+      });
+      expect(record.attempts[0].generation.market_cost).toBe(0.0000123);
+      expect(record.model.version).toBe("jev-1.13.0");
+      expect(record.model.provider).toBe("typesafe-ai");
+      expect(record.decision).not.toBeNull();
+    }
+  });
+
+  test("an answer whose usage never arrives is an execution error, never a pass", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "faai-runner-nogen-"));
+    const client = new GatewayClient({
+      apiKey: "test-key",
+      fetch: ((url: string | URL) => {
+        const target = String(url);
+        if (target.includes("/typesafe/v1/systemone")) {
+          return Promise.resolve(new Response(JSON.stringify(jevBody()), { status: 200, headers: { "content-type": "application/json" } }));
+        }
+        if (target.includes("/v1/generation")) {
+          return Promise.resolve(new Response(JSON.stringify({ error: "Usage event not found" }), { status: 404 }));
+        }
+        return Promise.reject(new Error(`unexpected url ${target}`));
+      }) as unknown as typeof fetch,
+      sleep: async () => {},
+    });
+
+    const result = await runArm(
+      baseParams({ arm: jevArm, outputDir: dir, repeatCount: 1, client, generationIngestionDelayMs: 0, sleep: async () => {} }),
+    );
+    expect(result.executionErrors).toBe(50);
+    expect(result.passed).toBe(0);
+
+    const records = readFileSync(join(dir, "records.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+    for (const record of records) {
+      expect(record.decision).toBeNull();
+      expect(record.error.kind).toBe("other");
+      expect(record.error.message).toContain("gateway-reported usage");
+    }
+  });
+});

@@ -3,7 +3,8 @@ import {
   GatewayClient,
   MissingApiKeyError,
   apiKeyFromEnv,
-  chatAttemptUsage,
+  attemptUsageFromGeneration,
+  generationLatencyMs,
   type ChatCompletionRequest,
   type SystemOneRequest,
 } from "../src/gateway_client.ts";
@@ -146,31 +147,41 @@ describe("GatewayClient.systemOne", () => {
 });
 
 describe("GatewayClient.lookupGeneration", () => {
-  test("returns cost, latency and tokens from the generation lookup", async () => {
+  test("reads the data-wrapped payload: charged cost, market cost, latency and tokens", async () => {
     const client = makeClient((input) => {
       expect(String(input)).toContain("https://ai-gateway.vercel.sh/v1/generation?id=gen_abc");
       return Promise.resolve(
         jsonResponse(200, {
-          id: "gen_abc",
-          model: "anthropic/claude-sonnet-5",
-          providerName: "anthropic",
-          totalCost: 0.00123,
-          latency: 812,
-          promptTokens: 640,
-          completionTokens: 24,
+          data: {
+            id: "gen_abc",
+            model: "anthropic/claude-sonnet-5-20261001",
+            provider_name: "anthropic",
+            total_cost: 0.00123,
+            market_cost: 0.0014,
+            latency: 812,
+            tokens_prompt: 640,
+            tokens_completion: 24,
+          },
         }),
       );
     });
     const info = await client.lookupGeneration("gen_abc");
-    expect(info).toEqual({
-      id: "gen_abc",
-      model: "anthropic/claude-sonnet-5",
-      provider: "anthropic",
-      cost: 0.00123,
-      latency: 812,
-      input_tokens: 640,
-      output_tokens: 24,
-    });
+    expect(info?.model).toBe("anthropic/claude-sonnet-5-20261001");
+    expect(info?.provider).toBe("anthropic");
+    expect(info?.cost).toBe(0.00123);
+    expect(info?.marketCost).toBe(0.0014);
+    expect(info?.latency).toBe(812);
+    expect(info?.input_tokens).toBe(640);
+    expect(info?.output_tokens).toBe(24);
+  });
+
+  test("falls back to generation_time when the gateway reports no latency", () => {
+    const info = {
+      id: "g", model: "m", provider: "p", cost: 0, marketCost: 0, latency: 0, generationTime: 266,
+      input_tokens: 1, output_tokens: 1, raw: {},
+    };
+    expect(generationLatencyMs(info)).toBe(266);
+    expect(generationLatencyMs({ ...info, latency: 40 })).toBe(40);
   });
 
   test("returns null while the usage event is not yet ingested, then the polling helper finds it", async () => {
@@ -179,7 +190,9 @@ describe("GatewayClient.lookupGeneration", () => {
       calls += 1;
       if (calls < 3) return Promise.resolve(jsonResponse(404, { error: "Usage event not found" }));
       return Promise.resolve(
-        jsonResponse(200, { id: "gen_abc", model: "m", providerName: "p", totalCost: 0.001, latency: 5, promptTokens: 1, completionTokens: 1 }),
+        jsonResponse(200, {
+          data: { id: "gen_abc", model: "m", provider_name: "p", total_cost: 0.001, market_cost: 0.001, latency: 5, tokens_prompt: 1, tokens_completion: 1 },
+        }),
       );
     });
     expect(await client.lookupGeneration("gen_abc")).toBeNull();
@@ -189,20 +202,23 @@ describe("GatewayClient.lookupGeneration", () => {
   });
 });
 
-describe("chatAttemptUsage", () => {
+describe("attemptUsageFromGeneration", () => {
   test("assembles gateway-reported usage from the generation lookup, falling back to body tokens", () => {
     expect(
-      chatAttemptUsage(
-        { id: "g", model: "m", provider: "p", cost: 0.001, latency: 812, input_tokens: null, output_tokens: null },
+      attemptUsageFromGeneration(
+        {
+          id: "g", model: "m", provider: "p", cost: 0.001, marketCost: 0.002, latency: 812, generationTime: 900,
+          input_tokens: null, output_tokens: null, raw: {},
+        },
         { input_tokens: 640, output_tokens: 24 },
       ),
     ).toEqual({ latency_ms: 812, input_tokens: 640, output_tokens: 24, cost: { amount: 0.001, currency: "USD" } });
-    expect(chatAttemptUsage(null, { input_tokens: 640, output_tokens: 24 })).toBeNull();
+    expect(attemptUsageFromGeneration(null, { input_tokens: 640, output_tokens: 24 })).toBeNull();
   });
 
   test("records a missing cost as null, never an estimate", () => {
-    const usage = chatAttemptUsage(
-      { id: "g", model: "m", provider: "p", cost: null, latency: 5, input_tokens: 1, output_tokens: 1 },
+    const usage = attemptUsageFromGeneration(
+      { id: "g", model: "m", provider: "p", cost: null, marketCost: null, latency: 5, generationTime: 9, input_tokens: 1, output_tokens: 1, raw: {} },
       null,
     );
     expect(usage?.cost).toBeNull();

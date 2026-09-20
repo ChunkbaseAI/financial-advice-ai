@@ -136,55 +136,28 @@ export async function evaluateCardWithJev(deps: JevDeps, card: Card, modelInput:
       callWithBackoff(async (): Promise<AttemptOutcome> => {
         const startedAt = Date.now();
         const result = await deps.client.systemOne(request);
-        const generation =
-          result.generationId === null
-            ? null
-            : await deps.client.lookupGenerationWithPolling(result.generationId, { tries: 6, delayMs: 1_000 });
         const elapsedMs = Date.now() - startedAt;
 
-        const usage =
-          generation === null || generation.latency === null
-            ? null
-            : {
-                latency_ms: generation.latency,
-                input_tokens: generation.input_tokens ?? result.usage?.input_tokens ?? 0,
-                output_tokens: generation.output_tokens ?? result.usage?.output_tokens ?? 0,
-                cost:
-                  result.gatewayCost !== null && result.gatewayCost !== undefined
-                    ? { amount: result.gatewayCost, currency: "USD" }
-                    : generation.cost !== null && generation.cost !== undefined
-                      ? { amount: generation.cost, currency: "USD" }
-                      : null,
-              };
+        const evidence = {
+          generationId: result.generationId,
+          bodyUsage: result.usage,
+        };
 
         const parsed = parseJevAnswers(result.answers);
         if (parsed === null) {
           return {
             status: "invalid-response",
             rawResponse: result.body,
-            usage,
+            usage: null,
             elapsedMs,
             message:
               "the Jev response was missing or malformed answers for the three frozen questions; " +
               (attemptNumber === 1 ? "retrying once with the identical typed questions" : "two failed attempts"),
+            ...evidence,
           };
         }
-        if (usage === null) {
-          return {
-            status: "transport-error",
-            rawResponse: result.body,
-            usage: null,
-            elapsedMs,
-            error: {
-              kind: "other" as const,
-              message:
-                "the generation lookup could not confirm gateway-reported usage; the answer is not recorded without it, never as a client-side estimate",
-            },
-          };
-        }
-        return { status: "parsed", answer: parsed, rawResponse: result.body, usage, elapsedMs };
+        return { status: "parsed", answer: parsed, rawResponse: result.body, usage: null, elapsedMs, ...evidence };
       }),
-
   });
 
   const model = outcome.attempts.length > 0 ? modelFromLastAttempt(deps.protocol, outcome.attempts) : null;

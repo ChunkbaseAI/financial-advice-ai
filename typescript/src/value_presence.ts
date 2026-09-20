@@ -1,6 +1,6 @@
 import type { CaseSet, Category } from "./case_set_schema.ts";
 
-const VALUE_PRESENCE_PASS_CATEGORIES = new Set<Category>([
+export const VALUE_PRESENCE_PASS_CATEGORIES = new Set<Category>([
   "correct",
   "wrong-subject",
   "stale-value",

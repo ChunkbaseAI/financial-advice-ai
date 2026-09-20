@@ -1,7 +1,7 @@
 import type { CheckName, CheckerProtocol, LlmVerdict } from "./checker_protocol.ts";
 import type { ModelInput } from "./input_preparation.ts";
 import { mapLlmOverall, mapLlmThree, type CardDecision } from "./decision_mapping.ts";
-import { chatAttemptUsage, GatewayClient, type ChatCompletionRequest } from "./gateway_client.ts";
+import { GatewayClient, type ChatCompletionRequest } from "./gateway_client.ts";
 import { callWithBackoff } from "./gateway_backoff.ts";
 import { runWithRetryPolicy, type AttemptOutcome } from "./retry_policy.ts";
 import type { CheckerCardResult } from "./evaluation_recorder.ts";
@@ -112,20 +112,11 @@ function decisionFromParsedAnswer(parsed: ParsedLlmAnswer): CardDecision {
   });
 }
 
-async function modelReportFromGeneration(client: GatewayClient, spec: LlmArmSpec, attempts: CheckerCardResult["attempts"]): Promise<ModelReport | null> {
+function modelReportFromResponse(spec: LlmArmSpec, attempts: CheckerCardResult["attempts"]): ModelReport | null {
   const last = attempts[attempts.length - 1];
   const body = last?.raw_response;
-  if (!isRecord(body)) return null;
-  const fallbackVersion = typeof body.model === "string" ? body.model : null;
-  const fallbackProvider = providerFromAttempt(last);
-  if (typeof body.id !== "string" || body.id.length === 0) {
-    return fallbackVersion === null ? null : { id: spec.modelId, version: fallbackVersion, provider: fallbackProvider };
-  }
-  const info = await client.lookupGenerationWithPolling(body.id, { tries: 3, delayMs: 500 });
-  const version = info?.model || fallbackVersion;
-  if (version === null || version.length === 0) return null;
-  const provider = info?.provider || fallbackProvider;
-  return { id: spec.modelId, version, provider };
+  if (!isRecord(body) || typeof body.model !== "string" || body.model.length === 0) return null;
+  return { id: spec.modelId, version: body.model, provider: providerFromAttempt(last) };
 }
 
 function providerFromAttempt(attempt: { raw_response: unknown } | undefined): string {
@@ -143,46 +134,34 @@ export async function evaluateCardWithLlm(deps: LlmDeps, modelInput: ModelInput)
         const request = buildLlmRequest(deps.protocol, modelInput, deps.spec, attemptNumber);
         const startedAt = Date.now();
         const result = await deps.client.chatCompletion(request);
-        const generation =
-          result.generationId === null
-            ? null
-            : await deps.client.lookupGenerationWithPolling(result.generationId, { tries: 6, delayMs: 1_000 });
         const elapsedMs = Date.now() - startedAt;
-        const usage = chatAttemptUsage(generation, result.usage);
+
+        const evidence = {
+          generationId: result.generationId,
+          bodyUsage: result.usage,
+        };
 
         const parsed = parseLlmAnswer(result.content, deps.spec.variant);
         if (parsed === null) {
           return {
             status: "invalid-response",
             rawResponse: result.body,
-            usage,
+            usage: null,
             elapsedMs,
             message:
               "the model's response was not valid JSON matching the required schema; " +
               (attemptNumber === 1 ? "retrying once with the frozen retry instruction" : "two failed attempts"),
+            ...evidence,
           };
         }
-        if (usage === null) {
-          return {
-            status: "transport-error",
-            rawResponse: result.body,
-            usage: null,
-            elapsedMs,
-            error: {
-              kind: "other" as const,
-              message:
-                "the generation lookup could not confirm gateway-reported usage; the answer is not recorded without it, never as a client-side estimate",
-            },
-          };
-        }
-        return { status: "parsed", answer: parsed, rawResponse: result.body, usage, elapsedMs };
+        return { status: "parsed", answer: parsed, rawResponse: result.body, usage: null, elapsedMs, ...evidence };
       }),
   });
 
   if (outcome.status === "answered" && outcome.answer !== undefined) {
     const parsed = outcome.answer as ParsedLlmAnswer;
     return {
-      model: await modelReportFromGeneration(deps.client, deps.spec, outcome.attempts),
+      model: modelReportFromResponse(deps.spec, outcome.attempts),
       rawAnswer: outcome.attempts.length === 1 ? parsed : outcome.attempts.map((a) => a.parsed_answer),
       attempts: outcome.attempts,
       firstAttemptInvalid: outcome.firstAttemptInvalid,
@@ -193,7 +172,7 @@ export async function evaluateCardWithLlm(deps: LlmDeps, modelInput: ModelInput)
   }
 
   return {
-    model: await modelReportFromGeneration(deps.client, deps.spec, outcome.attempts),
+    model: modelReportFromResponse(deps.spec, outcome.attempts),
     rawAnswer: outcome.attempts.map((a) => a.parsed_answer),
     attempts: outcome.attempts,
     firstAttemptInvalid: outcome.firstAttemptInvalid,

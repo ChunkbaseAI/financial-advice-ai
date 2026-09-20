@@ -107,16 +107,11 @@ describe("evaluateCardWithJev", () => {
         systemOneCalls += 1;
         return Promise.resolve(jsonResponse(body));
       }
-      if (target.includes("/v1/generation")) {
-        return Promise.resolve(
-          jsonResponse({ id: "gen_1", model: "typesafe-ai/jev", providerName: "typesafe-ai", totalCost: 0.00001155, latency: 180, promptTokens: 640, completionTokens: 20 }),
-        );
-      }
-      return Promise.reject(new Error(`unexpected url ${target}`));
+      return Promise.reject(new Error(`unexpected url ${target}; usage lookups are deferred to the runner`));
     };
   }
 
-  test("maps a passing answer set onto a pass with model report and gateway usage", async () => {
+  test("maps a passing answer set onto a pass, deferring usage to the runner via generation evidence", async () => {
     const result = await evaluateCardWithJev(
       { client: clientWith(jevFetch([fullJevBody({ ownership: 0.93, value: 0.95, time: 0.92 })])), protocol, roster },
       card("card-sp-01"),
@@ -132,12 +127,9 @@ describe("evaluateCardWithJev", () => {
       generation_id: "gen_1",
     });
     expect(result.attempts).toHaveLength(1);
-    expect(result.attempts[0]!.usage).toEqual({
-      latency_ms: 180,
-      input_tokens: 640,
-      output_tokens: 20,
-      cost: { amount: 0.00001155, currency: "USD" },
-    });
+    expect(result.attempts[0]!.usage).toBeNull();
+    expect(result.attempts[0]!.generation_id).toBe("gen_1");
+    expect(result.attempts[0]!.body_usage).toEqual({ input_tokens: 640, output_tokens: 20 });
   });
 
   test("a low value-support probability sends the card to review as unsupported", async () => {
@@ -259,7 +251,7 @@ describe("evaluateCardWithLlm", () => {
 
   function llmFetch(contents: string[]): FetchLike {
     let chatCalls = 0;
-    return (url, init) => {
+    return (url) => {
       const target = String(url);
       if (target.includes("/v1/chat/completions")) {
         const content = contents[Math.min(chatCalls, contents.length - 1)]!;
@@ -273,16 +265,11 @@ describe("evaluateCardWithLlm", () => {
           }),
         );
       }
-      if (target.includes("/v1/generation")) {
-        return Promise.resolve(
-          jsonResponse({ id: "gen_chat_1", model: "anthropic/claude-sonnet-5-20261001", providerName: "anthropic", totalCost: 0.0021, latency: 900, promptTokens: 900, completionTokens: 30 }),
-        );
-      }
-      return Promise.reject(new Error(`unexpected url ${target}`));
+      return Promise.reject(new Error(`unexpected url ${target}; usage lookups are deferred to the runner`));
     };
   }
 
-  test("a supported overall verdict passes and records the model report from the generation lookup", async () => {
+  test("a supported overall verdict passes and carries generation evidence for the deferred usage pass", async () => {
     const result = await evaluateCardWithLlm(
       {
         client: clientWith(llmFetch(['{"verdict":"supported","reason":"Every part matches the quoted span."}'])),
@@ -293,8 +280,10 @@ describe("evaluateCardWithLlm", () => {
     );
     expect(result.decision?.outcome).toBe("pass");
     expect(result.decision?.checks).toBeNull();
-    expect(result.model).toMatchObject({ id: "anthropic/claude-sonnet-5", version: "anthropic/claude-sonnet-5-20261001", provider: "anthropic" });
-    expect(result.attempts[0]!.usage?.cost).toEqual({ amount: 0.0021, currency: "USD" });
+    expect(result.model).toMatchObject({ id: "anthropic/claude-sonnet-5", version: "anthropic/claude-sonnet-5" });
+    expect(result.attempts[0]!.usage).toBeNull();
+    expect(result.attempts[0]!.generation_id).toBe("gen_chat_1");
+    expect(result.attempts[0]!.body_usage).toEqual({ input_tokens: 900, output_tokens: 30 });
     expect(result.attempts[0]!.parsed_answer).toEqual({
       kind: "overall",
       verdict: "supported",
@@ -332,7 +321,7 @@ describe("evaluateCardWithLlm", () => {
     expect(result.firstAttemptInvalid).toBe(true);
     expect(result.decision?.verdict).toBe("uncertain");
     expect(result.attempts).toHaveLength(2);
-    expect(result.attempts.every((a) => a.usage !== null)).toBe(true);
+    expect(result.attempts.every((a) => a.generation_id === "gen_chat_1")).toBe(true);
   });
 
   test("two invalid responses are an execution error with both attempts preserved", async () => {
