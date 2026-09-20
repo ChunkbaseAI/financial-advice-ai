@@ -22,4 +22,4 @@ export { buildPromptSet, promptHash, promptSetSha256, runRulesChecker } from "./
 export type { CardPrompt, RulesCheckResult } from "./rules_checker.ts";
 export { GatewayHttpError, GatewayTimeoutError, RateLimitExhaustedError, callWithBackoff } from "./gateway_backoff.ts";
 export type { BackoffOptions } from "./gateway_backoff.ts";
-export { canonicalJson, labeledSha256Of, sha256Hex, sha256Of } from "./hashing.ts";
+export { canonicalJson, labeledSha256Of, sha256Of } from "./hashing.ts";

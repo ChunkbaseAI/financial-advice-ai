@@ -44,6 +44,7 @@ export interface ModelSuccessInput extends RecordInput {
 export interface ModelErrorInput extends RecordInput {
   model?: ModelReport | null;
   error: { kind: ErrorKind; message: string; status?: number };
+  rawAnswer?: unknown;
 }
 
 export interface DeterministicResultInput extends RecordInput {
@@ -90,14 +91,7 @@ export class RunRecorder {
 
   recordModelSuccess(input: ModelSuccessInput): RunRecord {
     return this.write({
-      format_version: RUN_RECORD_FORMAT_VERSION,
-      run_id: this.runId,
-      sample_index: input.sampleIndex,
-      repeat_index: this.resolveRepeatIndex(input),
-      timestamp: this.now().toISOString(),
-      checker: input.checker,
-      card_id: input.cardId,
-      prompt_hash: input.promptHash,
+      ...this.baseRecord(input),
       model: input.model,
       verdict: input.verdict,
       raw_answer: input.rawAnswer ?? null,
@@ -112,17 +106,10 @@ export class RunRecorder {
         ? { kind: input.error.kind, message: input.error.message }
         : { kind: input.error.kind, message: input.error.message, status: input.error.status };
     return this.write({
-      format_version: RUN_RECORD_FORMAT_VERSION,
-      run_id: this.runId,
-      sample_index: input.sampleIndex,
-      repeat_index: this.resolveRepeatIndex(input),
-      timestamp: this.now().toISOString(),
-      checker: input.checker,
-      card_id: input.cardId,
-      prompt_hash: input.promptHash,
+      ...this.baseRecord(input),
       model: input.model ?? null,
       verdict: null,
-      raw_answer: null,
+      raw_answer: input.rawAnswer ?? null,
       usage: null,
       error,
     });
@@ -130,6 +117,17 @@ export class RunRecorder {
 
   recordDeterministicResult(input: DeterministicResultInput): RunRecord {
     return this.write({
+      ...this.baseRecord(input),
+      model: null,
+      verdict: input.verdict,
+      raw_answer: input.rawAnswer ?? null,
+      usage: null,
+      error: null,
+    });
+  }
+
+  private baseRecord(input: RecordInput): Omit<RunRecord, "model" | "verdict" | "raw_answer" | "usage" | "error"> {
+    return {
       format_version: RUN_RECORD_FORMAT_VERSION,
       run_id: this.runId,
       sample_index: input.sampleIndex,
@@ -138,12 +136,7 @@ export class RunRecorder {
       checker: input.checker,
       card_id: input.cardId,
       prompt_hash: input.promptHash,
-      model: null,
-      verdict: input.verdict,
-      raw_answer: input.rawAnswer ?? null,
-      usage: null,
-      error: null,
-    });
+    };
   }
 
   private resolveRepeatIndex(input: RecordInput): number {

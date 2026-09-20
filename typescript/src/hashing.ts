@@ -14,7 +14,7 @@ function serialize(value: unknown): string {
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${serialize(v)}`).join(",")}}`;
 }
 
-export function sha256Hex(text: string): string {
+function sha256Hex(text: string): string {
   return createHash("sha256").update(text).digest("hex");
 }
 

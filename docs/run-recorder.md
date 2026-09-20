@@ -36,7 +36,7 @@ One line of `records.jsonl` per model call:
 | `prompt_hash` | `sha256:` + 64 hex over the canonical JSON of the exact prompt the checker saw. |
 | `model` | `null` for deterministic checkers; otherwise `{ id, version, provider, generation_id? }` taken from gateway response metadata — `version` is the exact version reported back, never an alias, and `provider` records which provider served the call so routing is not a hidden variable. |
 | `verdict` | `supported` / `unsupported`, or `null` when the call failed. |
-| `raw_answer` | The raw answer as parsed, including probabilities and confidence where the model returns them; `null` on failure. |
+| `raw_answer` | The raw answer as parsed, including probabilities and confidence where the model returns them; on an `invalid-response` error, the partial raw answer that could not be parsed; `null` otherwise. |
 | `usage` | `{ latency_ms, input_tokens, output_tokens, cost }` from gateway-reported usage (provider metadata or the generation lookup), or `null`. Cost is `{ amount, currency }` or `null` when the gateway reported none. **Never a client-side estimate**: a successful model call without usage fails validation, and a deterministic checker recording usage fails validation. |
 | `error` | `null`, or `{ kind, message, status? }` with kind `rate-limit` (must be status 429), `timeout`, `http-error` (must carry its status), `invalid-response`, or `other`. Error and timeout records are preserved, never discarded. |
 

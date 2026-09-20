@@ -111,6 +111,25 @@ describe("RunRecorder", () => {
     expect(record.error).toEqual({ kind: "rate-limit", message: "gateway returned 429", status: 429 });
   });
 
+  test("preserves the partial raw answer on an invalid-response error record", () => {
+    const dir = makeDir();
+    const recorder = makeRecorder(dir);
+    recorder.recordModelError({
+      sampleIndex: 7,
+      cardId: "card-sp-08",
+      promptHash: `sha256:${HEX_64}`,
+      checker: "jev",
+      model: { id: "typesafe-ai/jev", version: "jev-1.0.0", provider: "vertex-ai" },
+      error: { kind: "invalid-response", message: "answer was not valid JSON" },
+      rawAnswer: { unparsed: "maybe supported? {verdict: ..." },
+    });
+    const record = readRecords(dir)[0]!;
+    expect(validateRunRecord(record)).toEqual([]);
+    expect(record.verdict).toBeNull();
+    expect(record.raw_answer).toEqual({ unparsed: "maybe supported? {verdict: ..." });
+    expect(record.error?.kind).toBe("invalid-response");
+  });
+
   test("fails loudly when a model call is recorded without the gateway-reported version", () => {
     const dir = makeDir();
     const recorder = makeRecorder(dir);
