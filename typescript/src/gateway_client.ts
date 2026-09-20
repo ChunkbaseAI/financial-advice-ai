@@ -96,6 +96,10 @@ export class GatewayClient {
     this.timeoutMs = options.timeoutMs ?? 120_000;
   }
 
+  ensureAuthenticated(): void {
+    this.requireApiKey();
+  }
+
   private requireApiKey(): string {
     if (this.apiKey === undefined || this.apiKey.trim().length === 0) throw new MissingApiKeyError();
     return this.apiKey;
