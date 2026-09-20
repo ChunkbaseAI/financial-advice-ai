@@ -8,7 +8,8 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "freeze:case-set": "bun src/freeze_case_set.ts"
+    "freeze:case-set": "bun src/freeze_case_set.ts",
+    "record:rules-run": "bun src/record_rules_run.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.2",
