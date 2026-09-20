@@ -1,0 +1,11 @@
+{
+  "protocol_file": "checker_protocol_v0_1.json",
+  "protocol_version": "0.1.0",
+  "sha256": "9e5ac64f4ef56cfef1e066efaf5a35985c0d03f15e1d473f2ea06d65aaae4b43",
+  "case_set_file": "case_set_v1.json",
+  "case_set_sha256": "e8150283bbed6eb138dc86ab616b37262091b23f9b7d8d45469b1768f0004c02",
+  "roster_file": "roster_v1.json",
+  "roster_sha256": "e44caa75cf33ecb90c18d16bff86a5b1b0beaaa32f73bb8d17a0fcfc6381eea1",
+  "frozen_at": "2026-09-20",
+  "note": "Frozen before any model run (issue #2). Every run verifies this hash plus its bindings to the frozen case set and roster, so any post-freeze edit fails loudly. Any protocol change means a new version and a rerun."
+}
